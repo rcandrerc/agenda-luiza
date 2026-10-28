@@ -8,7 +8,7 @@ import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS, VALOR_SEMANAL } fro
 
 // Coleções no Firestore:
 //   config/familia       { filha: {uid, nome} ou {}, pais: {uid: nome} }
-//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, vale, ativa, criadaEm }
+//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, vale, ordem, ativa, criadaEm }
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
 
@@ -75,8 +75,27 @@ export function descreverQuando(t) {
   return t.dias.map((n) => NOMES_DIAS[n]).join(', ');
 }
 
+// Posição da tarefa na lista: a escolhida pelos pais (ordem) ou, enquanto
+// ninguém mexeu, o momento em que foi criada.
+function valorOrdem(t) {
+  return t.ordem ?? t.criadaEm?.toMillis?.() ?? Number.MAX_SAFE_INTEGER;
+}
+
 function ordenar(lista) {
-  return lista.sort((a, b) => (a.criadaEm?.seconds ?? 0) - (b.criadaEm?.seconds ?? 0));
+  return lista.sort((a, b) => valorOrdem(a) - valorOrdem(b) || a.id.localeCompare(b.id));
+}
+
+// Grava a nova ordem de um grupo de tarefas, reaproveitando as mesmas posições
+// que o grupo já ocupava para não bagunçar as tarefas que não aparecem nele.
+export async function reordenarTarefas(novaOrdem, todas) {
+  const porId = new Map(todas.map((t) => [t.id, t]));
+  const posicoes = novaOrdem.map((id) => valorOrdem(porId.get(id))).sort((a, b) => a - b);
+  for (let i = 1; i < posicoes.length; i += 1) {
+    if (posicoes[i] <= posicoes[i - 1]) posicoes[i] = posicoes[i - 1] + 1;
+  }
+  const lote = writeBatch(db);
+  novaOrdem.forEach((id, i) => lote.update(doc(db, 'tarefas', id), { ordem: posicoes[i] }));
+  await lote.commit();
 }
 
 export function useTarefas() {

@@ -2,10 +2,11 @@ import { useState } from 'react';
 import Topo from './Topo';
 import {
   apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, descreverQuando, emojiSugerido, hoje,
-  removerTarefa, useConclusoes, useConclusoesSemana, useFotos, useTarefas,
+  removerTarefa, reordenarTarefas, useConclusoes, useConclusoesSemana, useFotos, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
 import Mesada from './Mesada';
+import { useReordenar } from './Reordenar';
 
 const NOMES_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const EMOJIS = ['⭐', '🛏️', '🧺', '🐱', '🍎', '🎒', '🪥', '🛁', '🧸', '📚', '✏️', '🌱', '🍽️', '🧹', '🗑️', '🐶'];
@@ -17,6 +18,7 @@ export default function TelaPais() {
   const fotos = useFotos(dia);
   const semana = useConclusoesSemana(dia);
   const [ampliada, setAmpliada] = useState(null);
+  const reordenar = useReordenar((todas ?? []).filter((t) => apareceNoDia(t, dia)).map((t) => t.id), (nova) => reordenarTarefas(nova, todas));
 
   const tarefas = todas && todas.filter((t) => apareceNoDia(t, dia));
   if (!tarefas || !semana || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
@@ -38,6 +40,7 @@ export default function TelaPais() {
 
         <section className="grupo">
           <h2>Tarefas de hoje</h2>
+          {tarefas.length > 1 && <p className="dica">Segure uma tarefa e arraste para mudar a ordem.</p>}
           {tarefas.length === 0 ? (
             <div className="vazio">
               <p>Ainda não tem nenhuma tarefa.</p>
@@ -45,7 +48,7 @@ export default function TelaPais() {
             </div>
           ) : (
             <div className="lista">
-              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} deHoje />)}
+              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
             </div>
           )}
         </section>
@@ -89,11 +92,11 @@ export default function TelaPais() {
   );
 }
 
-function ItemTarefa({ t, c, deHoje }) {
+function ItemTarefa({ t, c, deHoje, arrasto }) {
   const [editando, setEditando] = useState(false);
   return (
     <>
-      <div className="linha">
+      <div className="linha" {...arrasto}>
         <span className="emoji" aria-hidden="true">{t.emoji}</span>
         <div className="linha-texto">
           <div className="nome">{t.nome}</div>
