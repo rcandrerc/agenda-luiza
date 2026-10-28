@@ -5,7 +5,6 @@ import { MAX_PAIS } from './familia';
 import { entrarNaFamilia, limparFotosVencidas, useFamilia } from './dados';
 import TelaLuiza from './TelaLuiza';
 import TelaPais from './TelaPais';
-import Ilustracao from './Ilustracao';
 import Calendario from './Calendario';
 import Instalar from './Instalar';
 
@@ -138,14 +137,24 @@ function Login() {
 }
 
 // Moldura das telas de entrada: faixa colorida em cima e as ações embaixo.
+// A tela de login usa a ilustração da Lulu no topo.
 function Entrada({ icone, titulo, texto, children }) {
+  const capa = icone === '✅';
   return (
     <div className="tela entrada">
-      <div className="entrada-topo">
-        {icone === '✅' ? <Ilustracao /> : <div className="selo-logo" aria-hidden="true">{icone}</div>}
-        <h1>{titulo}</h1>
-        {texto && <p>{texto}</p>}
-      </div>
+      {capa ? (
+        <div className="entrada-capa">
+          <img src={`${import.meta.env.BASE_URL}lulu.jpg`} alt="Ilustração da Lulu estudando na escrivaninha" />
+          <div className="capa-degrade" />
+          <h1>{titulo}</h1>
+        </div>
+      ) : (
+        <div className="entrada-topo">
+          <div className="selo-logo" aria-hidden="true">{icone}</div>
+          <h1>{titulo}</h1>
+          {texto && <p>{texto}</p>}
+        </div>
+      )}
       <div className="entrada-base">{children}</div>
     </div>
   );
