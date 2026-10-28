@@ -102,7 +102,7 @@ function Login() {
       if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
         await signInWithRedirect(auth, provedor).catch(() => setErro('Não deu para entrar. Tente de novo.'));
       } else if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request') {
-        setErro('Não deu para entrar com o Google. Tente de novo.');
+        setErro(`Não deu para entrar com o Google (${e.code ?? 'erro'}). Tente de novo.`);
       }
     } finally {
       setEnviando(false);
