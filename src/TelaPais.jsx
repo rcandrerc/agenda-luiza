@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Topo from './Topo';
 import {
   apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, descreverQuando, emojiSugerido, hoje,
-  removerTarefa, reordenarTarefas, useConclusoes, useConclusoesSemana, useFotos, useTarefas,
+  removerTarefa, reordenarTarefas, urgenciaPrazo, useConclusoes, useConclusoesSemana, useFotos, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
 import Mesada from './Mesada';
@@ -101,7 +101,7 @@ function ItemTarefa({ t, c, deHoje, arrasto }) {
         <div className="linha-texto">
           <div className="nome">{t.nome}</div>
           <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
-          <span className="etiqueta">{descreverQuando(t)}</span>
+          <span className={`etiqueta ${urgenciaPrazo(t) ? `prazo-${urgenciaPrazo(t)}` : ''}`}>{descreverQuando(t)}</span>
           {t.vale && <span className="etiqueta">💰 Vale dinheiro</span>}
           <button className="editar" onClick={() => setEditando(!editando)}>{editando ? 'Fechar' : 'Editar'}</button>
         </div>
@@ -116,18 +116,27 @@ function ItemTarefa({ t, c, deHoje, arrasto }) {
 function EditorTarefa({ t, aoSalvar }) {
   const [vale, setVale] = useState(Boolean(t.vale));
   const [dias, setDias] = useState(t.dias?.length ? t.dias : [0, 1, 2, 3, 4, 5, 6]);
+  const [prazo, setPrazo] = useState(t.prazo ?? '');
   const umDia = Boolean(t.data);
+  const comPrazo = Boolean(t.prazo);
 
   async function salvar() {
-    if (!umDia && dias.length === 0) return;
-    await atualizarTarefa(t.id, umDia ? { vale } : { vale, dias: [...dias].sort(), diaria: true });
+    if (comPrazo) await atualizarTarefa(t.id, { prazo });
+    else if (umDia) await atualizarTarefa(t.id, { vale });
+    else if (dias.length > 0) await atualizarTarefa(t.id, { vale, dias: [...dias].sort(), diaria: true });
+    else return;
     aoSalvar();
   }
 
   return (
     <div className="editor">
-      {!umDia && <SeletorDias dias={dias} setDias={setDias} />}
-      <label className="marca"><input type="checkbox" checked={vale} onChange={(e) => setVale(e.target.checked)} /> Vale dinheiro (entra na mesada)</label>
+      {comPrazo && (
+        <label className="campo">Entregar até
+          <input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} required />
+        </label>
+      )}
+      {!umDia && !comPrazo && <SeletorDias dias={dias} setDias={setDias} />}
+      {!comPrazo && <label className="marca"><input type="checkbox" checked={vale} onChange={(e) => setVale(e.target.checked)} /> Vale dinheiro (entra na mesada)</label>}
       <button className="botao" onClick={salvar}>Salvar</button>
     </div>
   );
@@ -148,9 +157,11 @@ function SeletorDias({ dias, setDias }) {
 function NovaTarefa({ dia }) {
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('casa');
-  const [repete, setRepete] = useState(true);
+  const [tipo, setTipo] = useState('semana'); // semana, dia ou prazo
   const [dias, setDias] = useState([1, 2, 3, 4, 5]);
   const [data, setData] = useState(dia);
+  const [prazo, setPrazo] = useState(dia);
+  const [inicio, setInicio] = useState(dia);
   const [vale, setVale] = useState(false);
   const [emoji, setEmoji] = useState(null);
   const emojiFinal = emoji ?? emojiSugerido(nome);
@@ -158,10 +169,13 @@ function NovaTarefa({ dia }) {
   async function adicionar(e) {
     e.preventDefault();
     if (!nome.trim()) return;
-    if (repete && dias.length === 0) return;
+    if (tipo === 'semana' && dias.length === 0) return;
     await criarTarefa({
-      nome: nome.trim(), emoji: emojiFinal, categoria,
-      dias: repete ? [...dias].sort() : null, data: repete ? null : data, vale,
+      nome: nome.trim(), emoji: emojiFinal, categoria, vale,
+      dias: tipo === 'semana' ? [...dias].sort() : null,
+      data: tipo === 'dia' ? data : null,
+      prazo: tipo === 'prazo' ? prazo : null,
+      inicio: tipo === 'prazo' && inicio < prazo ? inicio : tipo === 'prazo' ? prazo : null,
     });
     setNome('');
     setEmoji(null);
@@ -177,17 +191,28 @@ function NovaTarefa({ dia }) {
             <option value="casa">Casa</option>
             <option value="escola">Escola</option>
           </select>
-          <select id="nova-frequencia" value={repete ? 'semana' : 'dia'} onChange={(e) => setRepete(e.target.value === 'semana')} aria-label="Frequência">
+          <select id="nova-frequencia" value={tipo} onChange={(e) => setTipo(e.target.value)} aria-label="Frequência">
             <option value="semana">Dias da semana</option>
             <option value="dia">Um dia só</option>
+            <option value="prazo">Até uma data (prazo)</option>
           </select>
         </div>
-        {repete ? (
-          <SeletorDias dias={dias} setDias={setDias} />
-        ) : (
+        {tipo === 'semana' && <SeletorDias dias={dias} setDias={setDias} />}
+        {tipo === 'dia' && (
           <input id="nova-data" type="date" value={data} min={dia} onChange={(e) => setData(e.target.value)} required aria-label="Dia da tarefa" />
         )}
-        <label className="marca"><input type="checkbox" checked={vale} onChange={(e) => setVale(e.target.checked)} /> Vale dinheiro (entra na mesada)</label>
+        {tipo === 'prazo' && (
+          <>
+            <label className="campo">Entregar até
+              <input id="novo-prazo" type="date" value={prazo} min={dia} onChange={(e) => setPrazo(e.target.value)} required />
+            </label>
+            <label className="campo">Aparecer para a Luiza a partir de
+              <input id="novo-inicio" type="date" value={inicio} min={dia} onChange={(e) => setInicio(e.target.value)} required />
+            </label>
+            <p className="dica">Ela vê todo dia até marcar como feita. Depois some.</p>
+          </>
+        )}
+        {tipo !== 'prazo' && <label className="marca"><input type="checkbox" checked={vale} onChange={(e) => setVale(e.target.checked)} /> Vale dinheiro (entra na mesada)</label>}
         <div className="emojis" role="radiogroup" aria-label="Emoji">
           {EMOJIS.map((em) => (
             <button type="button" key={em} role="radio" aria-checked={em === emojiFinal}

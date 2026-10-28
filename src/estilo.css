@@ -174,3 +174,17 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .linha.arrastando { position: relative; z-index: 6; background: var(--superficie); box-shadow: 0 10px 24px rgba(0,0,0,.28); transform-origin: center; scale: 1.02; }
 .linha.alvo { box-shadow: 0 -4px 0 var(--ceu); }
 .linha.alvo-fim { box-shadow: 0 4px 0 var(--ceu); }
+
+/* Tarefas com prazo */
+.etiqueta.prazo-perto { background: #fff1d6; color: #8a5a00; }
+.etiqueta.prazo-hoje { background: #ffe0c7; color: #a14400; }
+.etiqueta.prazo-atrasada { background: #fde0dc; color: #b3261e; }
+.prazo { font-size: 13px; font-weight: 800; color: var(--suave); }
+.prazo.perto { color: #b97a00; } .prazo.hoje { color: #c25a00; } .prazo.atrasada { color: var(--erro); } .prazo.ok { color: var(--feito); }
+@media (prefers-color-scheme: dark) {
+  .etiqueta.prazo-perto { background: #4a3a14; color: #ffd27a; }
+  .etiqueta.prazo-hoje { background: #4d2f17; color: #ffb27a; }
+  .etiqueta.prazo-atrasada { background: #4d1f1b; color: #ff9d93; }
+  .prazo.perto { color: #ffd27a; } .prazo.hoje { color: #ffb27a; }
+}
+.campo { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }

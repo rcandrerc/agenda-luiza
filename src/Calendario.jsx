@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Topo from './Topo';
-import { descreverQuando, formatarDia, hoje, tarefaDoDia, useConclusoesPeriodo, useTarefas } from './dados';
+import { descreverQuando, formatarDia, hoje, tarefaDoDia, urgenciaPrazo, useConclusoesPeriodo, useTarefas } from './dados';
 
 const CABECALHO = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
@@ -29,8 +29,11 @@ export default function Calendario() {
   const feitas = new Map(conclusoes.map((c) => [`${c.dia}_${c.tarefaId}`, c]));
   const doDia = (dia) => tarefas.filter((t) => tarefaDoDia(t, dia));
 
+  // Tarefa com prazo só conta no calendário no dia da entrega (ou no dia em que foi feita).
+  const contaNoDia = (t, dia) => !t.prazo || dia === t.prazo || dia === t.concluidaDia;
+
   function situacao(dia) {
-    const lista = doDia(dia);
+    const lista = doDia(dia).filter((t) => contaNoDia(t, dia));
     if (lista.length === 0) return 'vazio';
     const n = lista.filter((t) => feitas.has(`${dia}_${t.id}`)).length;
     if (dia > hojeStr) return 'futuro';
@@ -89,7 +92,9 @@ export default function Calendario() {
                     <div className="linha-texto">
                       <div className="nome">{t.nome}</div>
                       <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
-                      <span className="etiqueta">{descreverQuando(t)}</span>
+                      <span className={`etiqueta ${urgenciaPrazo(t) ? `prazo-${urgenciaPrazo(t)}` : ''}`}>
+                        {t.prazo && sel === t.prazo ? '📌 Entrega neste dia' : descreverQuando(t)}
+                      </span>
                     </div>
                     <span className={`selo ${c ? 'ok' : ''}`}>
                       {c ? `Feita ${hora(c.feitaEm)}` : passado ? (sel === hojeStr ? 'Pendente' : 'Não feita') : 'Programada'}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query,
   runTransaction, serverTimestamp, setDoc, Timestamp, updateDoc, where, writeBatch,
@@ -8,7 +8,7 @@ import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS, VALOR_SEMANAL } fro
 
 // Coleções no Firestore:
 //   config/familia       { filha: {uid, nome} ou {}, pais: {uid: nome} }
-//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, vale, ordem, ativa, criadaEm }
+//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, prazo, inicio, vale, ordem, ativa, criadaEm }
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
 
@@ -51,9 +51,21 @@ function diaDaSemana(dia) {
   return new Date(`${dia}T12:00:00`).getDay();
 }
 
+// Tarefa com prazo (ex.: dever de casa): aparece a partir de "inicio" (ou do dia
+// em que foi criada) até ser feita, uma vez só. Passando do prazo sem fazer,
+// continua aparecendo como atrasada nos dias até hoje.
+function prazoVisivel(t, dia) {
+  const criada = t.criadaEm?.toDate?.();
+  const inicio = t.inicio ?? (criada ? formatarDia(criada) : hoje());
+  if (dia < inicio) return false;
+  if (t.concluidaDia) return dia <= t.concluidaDia;
+  return dia <= (t.prazo > hoje() ? t.prazo : hoje());
+}
+
 // Uma tarefa pode ser de um dia só (data), de alguns dias da semana (dias)
 // ou, nas tarefas antigas, de todo dia (diaria sem dias).
 export function apareceNoDia(t, dia) {
+  if (t.prazo) return prazoVisivel(t, dia);
   if (t.data) return t.data === dia;
   if (t.dias?.length) return t.dias.includes(diaDaSemana(dia));
   return Boolean(t.diaria);
@@ -63,12 +75,33 @@ export function apareceNoDia(t, dia) {
 // que se repete (para o calendário não mostrar pendências que nunca existiram).
 export function tarefaDoDia(t, dia) {
   if (!apareceNoDia(t, dia)) return false;
-  if (t.data) return true;
+  if (t.data || t.prazo) return true;
   const criada = t.criadaEm?.toDate?.();
   return !criada || formatarDia(criada) <= dia;
 }
 
+function dataCurta(dia) {
+  return new Date(`${dia}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+}
+
+// Quão perto está o prazo de uma tarefa ainda não feita: '', 'perto', 'hoje' ou 'atrasada'.
+export function urgenciaPrazo(t) {
+  if (!t.prazo || t.concluidaDia) return '';
+  const h = hoje();
+  if (t.prazo < h) return 'atrasada';
+  if (t.prazo === h) return 'hoje';
+  const dias = (new Date(`${t.prazo}T12:00:00`) - new Date(`${h}T12:00:00`)) / 86400000;
+  return dias <= 2 ? 'perto' : '';
+}
+
 export function descreverQuando(t) {
+  if (t.prazo) {
+    const u = urgenciaPrazo(t);
+    if (u === 'atrasada') return `Atrasada! era até ${dataCurta(t.prazo)}`;
+    if (u === 'hoje') return 'Entregar hoje';
+    if (u === 'perto' && t.prazo === formatarDia(new Date(Date.now() + 86400000))) return 'Entregar amanhã';
+    return `Entregar até ${dataCurta(t.prazo)}`;
+  }
   if (t.data) return `Só ${new Date(`${t.data}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}`;
   if (!t.dias?.length || t.dias.length === 7) return 'Todo dia';
   if (t.dias.length === 5 && [1, 2, 3, 4, 5].every((n) => t.dias.includes(n))) return 'Seg a sex';
@@ -98,9 +131,33 @@ export async function reordenarTarefas(novaOrdem, todas) {
   await lote.commit();
 }
 
+// Conclusões (em qualquer dia) das tarefas informadas.
+function useConclusoesDe(ids) {
+  const chave = ids.join(',');
+  const [lista, setLista] = useState([]);
+  useEffect(() => {
+    if (!ids.length) {
+      setLista([]);
+      return undefined;
+    }
+    const q = query(collection(db, 'conclusoes'), where('tarefaId', 'in', ids.slice(0, 30)));
+    return onSnapshot(q, (snap) => setLista(snap.docs.map((x) => x.data())));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chave]);
+  return lista;
+}
+
 export function useTarefas() {
-  const tarefas = useColecao(() => query(collection(db, 'tarefas'), where('ativa', '==', true)), []);
-  return tarefas && ordenar(tarefas);
+  const base = useColecao(() => query(collection(db, 'tarefas'), where('ativa', '==', true)), []);
+  const feitas = useConclusoesDe((base ?? []).filter((t) => t.prazo).map((t) => t.id));
+  return useMemo(() => {
+    if (!base) return null;
+    const primeira = new Map();
+    feitas.forEach((c) => {
+      if (!primeira.has(c.tarefaId) || c.dia < primeira.get(c.tarefaId)) primeira.set(c.tarefaId, c.dia);
+    });
+    return ordenar(base.map((t) => (t.prazo ? { ...t, concluidaDia: primeira.get(t.id) ?? null } : t)));
+  }, [base, feitas]);
 }
 
 export function useTarefasDoDia(dia) {
@@ -133,7 +190,7 @@ export function useConclusoesSemana(dia) {
 // tarefas que valem dinheiro (cada tarefa conta uma vez por dia em que aparece).
 export function calcularMesada(tarefas, conclusoesSemana, dia) {
   const dias = diasDaSemana(dia);
-  const pagas = tarefas.filter((t) => t.vale);
+  const pagas = tarefas.filter((t) => t.vale && !t.prazo);
   const total = pagas.reduce((n, t) => n + dias.filter((d) => apareceNoDia(t, d)).length, 0);
   const ids = new Set(pagas.map((t) => t.id));
   const feitas = Math.min(total, conclusoesSemana.filter((c) => ids.has(c.tarefaId)).length);
@@ -183,12 +240,13 @@ export async function limparFotosVencidas() {
 
 // dias: números de 0 (domingo) a 6 (sábado) para repetir toda semana;
 // data: "AAAA-MM-DD" para uma tarefa de um dia só (pode ser amanhã).
-export async function criarTarefa({ nome, emoji, categoria, dias, data, vale }) {
-  const repete = !data;
+export async function criarTarefa({ nome, emoji, categoria, dias, data, vale, prazo, inicio }) {
+  const repete = !data && !prazo;
   await addDoc(collection(db, 'tarefas'), {
     nome, emoji, categoria, detalhe: '',
     diaria: repete, dias: repete ? dias : null, data: data ?? null,
-    vale: Boolean(vale), ativa: true, criadaEm: serverTimestamp(),
+    prazo: prazo ?? null, inicio: prazo ? inicio ?? null : null,
+    vale: Boolean(vale) && !prazo, ativa: true, criadaEm: serverTimestamp(),
   });
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Topo from './Topo';
 import {
-  calcularMesada, desmarcar, dinheiro, enviarFoto, hoje, marcar, useConclusoes, useConclusoesSemana, useFotos, useTarefas, useTarefasDoDia,
+  calcularMesada, descreverQuando, desmarcar, dinheiro, enviarFoto, hoje, marcar, useConclusoes, useConclusoesSemana, useFotos, urgenciaPrazo, useTarefas, useTarefasDoDia,
 } from './dados';
 import Mesada from './Mesada';
 
@@ -86,6 +86,7 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
         <div>
           <div className="nome">{tarefa.nome}</div>
           {tarefa.detalhe && <div className="detalhe">{tarefa.detalhe}</div>}
+          {tarefa.prazo && <div className={`prazo ${feita ? 'ok' : urgenciaPrazo(tarefa)}`}>{feita ? '✓ Entregue' : descreverQuando(tarefa)}</div>}
           {valor > 0 && <div className={`ganho ${feita ? 'ok' : ''}`}>{feita ? '✓ ' : ''}+{dinheiro(valor)}</div>}
         </div>
       </div>
