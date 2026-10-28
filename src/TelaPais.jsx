@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import Topo from './Topo';
 import {
-  criarTarefa, criarTarefasIniciais, emojiSugerido, hoje, removerTarefa,
-  useConclusoes, useFotos, useTarefasDoDia,
+  apareceNoDia, criarTarefa, criarTarefasIniciais, descreverQuando, emojiSugerido, hoje,
+  removerTarefa, useConclusoes, useFotos, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
 
+const NOMES_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const EMOJIS = ['⭐', '🛏️', '🧺', '🐱', '🍎', '🎒', '🪥', '🛁', '🧸', '📚', '✏️', '🌱', '🍽️', '🧹', '🗑️', '🐶'];
 
 export default function TelaPais() {
   const dia = hoje();
-  const tarefas = useTarefasDoDia(dia);
+  const todas = useTarefas();
   const conclusoes = useConclusoes(dia);
   const fotos = useFotos(dia);
   const [ampliada, setAmpliada] = useState(null);
 
+  const tarefas = todas && todas.filter((t) => apareceNoDia(t, dia));
   if (!tarefas || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
 
   const feitas = tarefas.filter((t) => conclusoes[t.id]).length;
@@ -46,7 +48,7 @@ export default function TelaPais() {
                     <div className="linha-texto">
                       <div className="nome">{t.nome}</div>
                       <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
-                      {!t.diaria && <span className="etiqueta">Só hoje</span>}
+                      <span className="etiqueta">{descreverQuando(t)}</span>
                     </div>
                     <span className={`selo ${c ? 'ok' : ''}`}>{c ? `Feita ${hora(c.feitaEm)}` : 'Pendente'}</span>
                     <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
@@ -73,6 +75,26 @@ export default function TelaPais() {
           </div>
         </section>
 
+        {todas.some((t) => !apareceNoDia(t, dia)) && (
+          <section className="grupo">
+            <h2>Outras tarefas</h2>
+            <p className="dica">Não aparecem hoje, mas já estão programadas.</p>
+            <div className="lista">
+              {todas.filter((t) => !apareceNoDia(t, dia)).map((t) => (
+                <div key={t.id} className="linha">
+                  <span className="emoji" aria-hidden="true">{t.emoji}</span>
+                  <div className="linha-texto">
+                    <div className="nome">{t.nome}</div>
+                    <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
+                    <span className="etiqueta">{descreverQuando(t)}</span>
+                  </div>
+                  <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <NovaTarefa dia={dia} />
       </main>
 
@@ -89,14 +111,20 @@ export default function TelaPais() {
 function NovaTarefa({ dia }) {
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('casa');
-  const [diaria, setDiaria] = useState(true);
+  const [repete, setRepete] = useState(true);
+  const [dias, setDias] = useState([1, 2, 3, 4, 5]);
+  const [data, setData] = useState(dia);
   const [emoji, setEmoji] = useState(null);
   const emojiFinal = emoji ?? emojiSugerido(nome);
 
   async function adicionar(e) {
     e.preventDefault();
     if (!nome.trim()) return;
-    await criarTarefa({ nome: nome.trim(), emoji: emojiFinal, categoria, diaria, dia });
+    if (repete && dias.length === 0) return;
+    await criarTarefa({
+      nome: nome.trim(), emoji: emojiFinal, categoria,
+      dias: repete ? [...dias].sort() : null, data: repete ? null : data,
+    });
     setNome('');
     setEmoji(null);
   }
@@ -111,11 +139,22 @@ function NovaTarefa({ dia }) {
             <option value="casa">Casa</option>
             <option value="escola">Escola</option>
           </select>
-          <select id="nova-frequencia" value={diaria ? 'diaria' : 'hoje'} onChange={(e) => setDiaria(e.target.value === 'diaria')} aria-label="Frequência">
-            <option value="diaria">Todo dia</option>
-            <option value="hoje">Só hoje</option>
+          <select id="nova-frequencia" value={repete ? 'semana' : 'dia'} onChange={(e) => setRepete(e.target.value === 'semana')} aria-label="Frequência">
+            <option value="semana">Dias da semana</option>
+            <option value="dia">Um dia só</option>
           </select>
         </div>
+        {repete ? (
+          <div className="dias" role="group" aria-label="Dias da semana">
+            {NOMES_DIAS.map((n, i) => (
+              <button type="button" key={n} aria-pressed={dias.includes(i)}
+                className={dias.includes(i) ? 'escolhido' : ''}
+                onClick={() => setDias(dias.includes(i) ? dias.filter((x) => x !== i) : [...dias, i])}>{n}</button>
+            ))}
+          </div>
+        ) : (
+          <input id="nova-data" type="date" value={data} min={dia} onChange={(e) => setData(e.target.value)} required aria-label="Dia da tarefa" />
+        )}
         <div className="emojis" role="radiogroup" aria-label="Emoji">
           {EMOJIS.map((em) => (
             <button type="button" key={em} role="radio" aria-checked={em === emojiFinal}

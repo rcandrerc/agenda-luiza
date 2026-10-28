@@ -8,7 +8,7 @@ import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS } from './familia';
 
 // Coleções no Firestore:
 //   config/familia       { filha: {uid, nome} ou {}, pais: {uid: nome} }
-//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, data, ativa, criadaEm }
+//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, ativa, criadaEm }
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
 
@@ -27,12 +27,39 @@ function useColecao(q, deps) {
   return itens;
 }
 
-export function useTarefasDoDia(dia) {
+const NOMES_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+function diaDaSemana(dia) {
+  return new Date(`${dia}T12:00:00`).getDay();
+}
+
+// Uma tarefa pode ser de um dia só (data), de alguns dias da semana (dias)
+// ou, nas tarefas antigas, de todo dia (diaria sem dias).
+export function apareceNoDia(t, dia) {
+  if (t.data) return t.data === dia;
+  if (t.dias?.length) return t.dias.includes(diaDaSemana(dia));
+  return Boolean(t.diaria);
+}
+
+export function descreverQuando(t) {
+  if (t.data) return `Só ${new Date(`${t.data}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}`;
+  if (!t.dias?.length || t.dias.length === 7) return 'Todo dia';
+  if (t.dias.length === 5 && [1, 2, 3, 4, 5].every((n) => t.dias.includes(n))) return 'Seg a sex';
+  return t.dias.map((n) => NOMES_DIAS[n]).join(', ');
+}
+
+function ordenar(lista) {
+  return lista.sort((a, b) => (a.criadaEm?.seconds ?? 0) - (b.criadaEm?.seconds ?? 0));
+}
+
+export function useTarefas() {
   const tarefas = useColecao(() => query(collection(db, 'tarefas'), where('ativa', '==', true)), []);
-  if (!tarefas) return null;
-  return tarefas
-    .filter((t) => t.diaria || t.data === dia)
-    .sort((a, b) => (a.criadaEm?.seconds ?? 0) - (b.criadaEm?.seconds ?? 0));
+  return tarefas && ordenar(tarefas);
+}
+
+export function useTarefasDoDia(dia) {
+  const tarefas = useTarefas();
+  return tarefas && tarefas.filter((t) => apareceNoDia(t, dia));
 }
 
 export function useConclusoes(dia) {
@@ -81,10 +108,14 @@ export async function limparFotosVencidas() {
   await Promise.all(snap.docs.map((d) => deleteDoc(d.ref).catch(() => {})));
 }
 
-export async function criarTarefa({ nome, emoji, categoria, diaria, dia }) {
+// dias: números de 0 (domingo) a 6 (sábado) para repetir toda semana;
+// data: "AAAA-MM-DD" para uma tarefa de um dia só (pode ser amanhã).
+export async function criarTarefa({ nome, emoji, categoria, dias, data }) {
+  const repete = !data;
   await addDoc(collection(db, 'tarefas'), {
-    nome, emoji, categoria, detalhe: diaria ? 'Todo dia' : 'Só hoje',
-    diaria, data: diaria ? null : dia, ativa: true, criadaEm: serverTimestamp(),
+    nome, emoji, categoria, detalhe: '',
+    diaria: repete, dias: repete ? dias : null, data: data ?? null,
+    ativa: true, criadaEm: serverTimestamp(),
   });
 }
 

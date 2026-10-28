@@ -78,7 +78,7 @@ function Tarefa({ tarefa, dia, conclusao, foto }) {
         <span className="emoji" aria-hidden="true">{tarefa.emoji}</span>
         <div>
           <div className="nome">{tarefa.nome}</div>
-          <div className="detalhe">{tarefa.detalhe}</div>
+          {tarefa.detalhe && <div className="detalhe">{tarefa.detalhe}</div>}
         </div>
       </div>
       <label className={`camera ${foto ? 'tem' : ''}`} title="Tirar foto">
