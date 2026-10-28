@@ -124,7 +124,7 @@ function Login() {
   }
 
   return (
-    <Entrada icone="✅" titulo="Tarefas da Lulu" texto="Rotina diária, mesada e acompanhamento da família.">
+    <Entrada icone="✅" titulo="Tarefas da Lulu">
       <button className="google" disabled={enviando} onClick={entrar}>
         <IconeGoogle />
         {enviando ? 'Entrando…' : 'Entrar com o Google'}
@@ -142,7 +142,7 @@ function Entrada({ icone, titulo, texto, children }) {
       <div className="entrada-topo">
         {icone === '✅' ? <Ilustracao /> : <div className="selo-logo" aria-hidden="true">{icone}</div>}
         <h1>{titulo}</h1>
-        <p>{texto}</p>
+        {texto && <p>{texto}</p>}
       </div>
       <div className="entrada-base">{children}</div>
     </div>
