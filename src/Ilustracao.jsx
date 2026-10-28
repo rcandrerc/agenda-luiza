@@ -3,10 +3,11 @@ export default function Ilustracao() {
   return (
     <svg className="ilustracao" viewBox="0 0 360 250" role="img" aria-label="Menina arrumando a mochila e a lancheira">
       <defs>
-        <radialGradient id="pele" cx=".4" cy=".35" r=".8"><stop offset="0" stopColor="#ffe3c8" /><stop offset="1" stopColor="#f0b88c" /></radialGradient>
-        <linearGradient id="cabelo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8a5430" /><stop offset="1" stopColor="#3b2214" /></linearGradient>
-        <linearGradient id="vestido" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ff9cc2" /><stop offset="1" stopColor="#ee4f8a" /></linearGradient>
-        <radialGradient id="iris" cx=".4" cy=".35" r=".8"><stop offset="0" stopColor="#c58a4e" /><stop offset="1" stopColor="#5b3416" /></radialGradient>
+        <radialGradient id="pele" cx=".4" cy=".35" r=".8"><stop offset="0" stopColor="#ffe9d6" /><stop offset="1" stopColor="#f2bd98" /></radialGradient>
+        <linearGradient id="cabelo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#5a5a64" /><stop offset="1" stopColor="#1d1d24" /></linearGradient>
+        <linearGradient id="vestido" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffb9cc" /><stop offset="1" stopColor="#f2849f" /></linearGradient>
+        <radialGradient id="iris" cx=".4" cy=".35" r=".8"><stop offset="0" stopColor="#9a6038" /><stop offset="1" stopColor="#35190a" /></radialGradient>
+        <radialGradient id="manga" cx=".4" cy=".35" r=".8"><stop offset="0" stopColor="#ffffff" /><stop offset="1" stopColor="#f5c6d4" /></radialGradient>
         <radialGradient id="bochecha"><stop offset="0" stopColor="#ff8fae" stopOpacity=".7" /><stop offset="1" stopColor="#ff8fae" stopOpacity="0" /></radialGradient>
       </defs>
       {/* nuvens e sol */}
@@ -34,57 +35,56 @@ export default function Ilustracao() {
       </g>
       {/* menina */}
       <g>
-        {/* cabelo de trás e maria-chiquinhas */}
-        <path d="M118 104 q-4 -52 42 -52 q46 0 42 52 q2 30 -10 44 h-64 q-12 -14 -10 -44z" fill="url(#cabelo)" />
-        <g>
-          <ellipse cx="116" cy="132" rx="17" ry="24" fill="url(#cabelo)" transform="rotate(14 116 132)" />
-          <ellipse cx="204" cy="132" rx="17" ry="24" fill="url(#cabelo)" transform="rotate(-14 204 132)" />
-          <path d="M104 104 l12 8 l-2 -14z M216 104 l-12 8 l2 -14z" fill="#ff5c93" />
-          <circle cx="110" cy="105" r="9" fill="#ff5c93" /><circle cx="210" cy="105" r="9" fill="#ff5c93" />
-          <circle cx="110" cy="105" r="3.5" fill="#ffd0e0" /><circle cx="210" cy="105" r="3.5" fill="#ffd0e0" />
-        </g>
+        {/* coques de trás */}
+        <circle cx="124" cy="58" r="21" fill="url(#cabelo)" /><circle cx="196" cy="58" r="21" fill="url(#cabelo)" />
+        <path d="M112 52 q10 -10 22 -2 M184 50 q12 -8 22 2" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".25" />
+        <rect x="104" y="68" width="36" height="14" rx="7" fill="#ff9fba" transform="rotate(-18 122 75)" />
+        <rect x="180" y="68" width="36" height="14" rx="7" fill="#ff9fba" transform="rotate(18 198 75)" />
+        <path d="M112 74 l20 -4 M188 70 l20 4" stroke="#ffc9d9" strokeWidth="3" strokeLinecap="round" opacity=".8" />
         {/* pernas e sapatos */}
-        <rect x="141" y="196" width="13" height="28" rx="6.5" fill="url(#pele)" />
-        <rect x="166" y="196" width="13" height="28" rx="6.5" fill="url(#pele)" />
-        <path d="M134 232 q0 -12 14 -12 h8 q4 0 4 6 v6z" fill="#2f8fb8" />
-        <path d="M186 232 q0 -12 -14 -12 h-8 q-4 0 -4 6 v6z" fill="#2f8fb8" />
+        <rect x="141" y="198" width="13" height="26" rx="6.5" fill="url(#pele)" />
+        <rect x="166" y="198" width="13" height="26" rx="6.5" fill="url(#pele)" />
+        <path d="M134 232 q0 -12 14 -12 h8 q4 0 4 6 v6z" fill="#7a5cc7" />
+        <path d="M186 232 q0 -12 -14 -12 h-8 q-4 0 -4 6 v6z" fill="#7a5cc7" />
         <rect x="136" y="226" width="22" height="4" rx="2" fill="#fff" opacity=".8" />
         <rect x="162" y="226" width="22" height="4" rx="2" fill="#fff" opacity=".8" />
-        {/* vestido */}
-        <path d="M128 204 q32 16 64 0 l-8 -62 q-24 10 -48 0z" fill="url(#vestido)" />
-        <path d="M134 196 q26 10 52 0" fill="none" stroke="#fff" strokeWidth="3" opacity=".5" strokeLinecap="round" />
-        <path d="M148 142 q12 12 24 0 l-4 -6 q-8 6 -16 0z" fill="#fff" />
-        <circle cx="160" cy="160" r="4" fill="#ffd166" /><circle cx="160" cy="176" r="4" fill="#ffd166" />
-        {/* braços e mãos */}
-        <path d="M137 150 q-20 16 -12 38" fill="none" stroke="#ff6fa3" strokeWidth="15" strokeLinecap="round" />
-        <path d="M183 150 q26 -2 40 -20" fill="none" stroke="#ff6fa3" strokeWidth="15" strokeLinecap="round" />
-        <circle cx="125" cy="192" r="8" fill="url(#pele)" /><circle cx="224" cy="128" r="8" fill="url(#pele)" />
-        {/* pescoço, orelhas e cabeça */}
-        <rect x="150" y="124" width="20" height="18" rx="8" fill="#e9a97c" />
-        <circle cx="121" cy="104" r="8" fill="url(#pele)" /><circle cx="199" cy="104" r="8" fill="url(#pele)" />
-        <ellipse cx="160" cy="100" rx="40" ry="38" fill="url(#pele)" />
-        {/* franja */}
-        <path d="M120 96 q-2 -42 40 -44 q42 2 40 44 q-8 -20 -26 -26 q-6 14 -24 18 q-18 4 -30 8z" fill="url(#cabelo)" />
-        <path d="M134 64 q14 -8 30 -6" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" opacity=".35" />
+        {/* blusa e saia */}
+        <path d="M128 206 q32 14 64 0 l-6 -66 q-26 12 -52 0z" fill="url(#vestido)" />
+        <path d="M134 198 q26 9 52 0" fill="none" stroke="#fff" strokeWidth="3" opacity=".45" strokeLinecap="round" />
+        {/* braços (pele) e mangas bufantes */}
+        <path d="M134 154 q-16 16 -10 34" fill="none" stroke="url(#pele)" strokeWidth="13" strokeLinecap="round" />
+        <path d="M186 154 q26 -2 38 -22" fill="none" stroke="url(#pele)" strokeWidth="13" strokeLinecap="round" />
+        <circle cx="124" cy="190" r="8" fill="url(#pele)" /><circle cx="225" cy="129" r="8" fill="url(#pele)" />
+        <circle cx="134" cy="151" r="12" fill="url(#manga)" /><circle cx="186" cy="151" r="12" fill="url(#manga)" />
+        {/* pescoço e gola */}
+        <rect x="150" y="124" width="20" height="20" rx="8" fill="#eaa97d" />
+        <path d="M146 140 q14 14 28 0" fill="none" stroke="#f06d93" strokeWidth="4" strokeLinecap="round" />
+        {/* orelhas e rosto */}
+        <circle cx="120" cy="104" r="8" fill="url(#pele)" /><circle cx="200" cy="104" r="8" fill="url(#pele)" />
+        <ellipse cx="160" cy="100" rx="41" ry="38" fill="url(#pele)" />
+        {/* cabelo: topo com risca no meio e mechas laterais */}
+        <path d="M118 100 q-8 -52 42 -54 q50 2 42 54 q-3 -22 -14 -34 q-14 10 -28 12 q-14 -2 -28 -12 q-11 12 -14 34z" fill="url(#cabelo)" />
+        <path d="M160 48 v14" stroke="#15151b" strokeWidth="2" opacity=".5" />
+        <path d="M120 98 q-4 22 4 38 q-9 -4 -11 -16 q-2 -14 7 -22z" fill="url(#cabelo)" />
+        <path d="M200 98 q4 22 -4 38 q9 -4 11 -16 q2 -14 -7 -22z" fill="url(#cabelo)" />
+        <path d="M206 124 q10 18 -2 32" fill="none" stroke="#2a2a33" strokeWidth="4" strokeLinecap="round" />
+        <path d="M132 62 q12 -10 28 -9" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" opacity=".3" />
         {/* sobrancelhas */}
-        <path d="M137 87 q9 -6 18 -1" fill="none" stroke="#4a2a14" strokeWidth="3" strokeLinecap="round" />
-        <path d="M165 86 q9 -5 18 1" fill="none" stroke="#4a2a14" strokeWidth="3" strokeLinecap="round" />
-        {/* olhos grandes */}
-        <ellipse cx="146" cy="102" rx="11.5" ry="13.5" fill="#fff" />
-        <ellipse cx="174" cy="102" rx="11.5" ry="13.5" fill="#fff" />
-        <circle cx="147" cy="104" r="9" fill="url(#iris)" /><circle cx="173" cy="104" r="9" fill="url(#iris)" />
-        <circle cx="147" cy="104" r="4.6" fill="#1d1109" /><circle cx="173" cy="104" r="4.6" fill="#1d1109" />
-        <circle cx="150.5" cy="100" r="3.4" fill="#fff" /><circle cx="176.5" cy="100" r="3.4" fill="#fff" />
-        <circle cx="144" cy="108" r="1.6" fill="#fff" /><circle cx="170" cy="108" r="1.6" fill="#fff" />
-        <path d="M134 98 q12 -10 24 0" fill="none" stroke="#2b1a0e" strokeWidth="2" strokeLinecap="round" />
-        <path d="M162 98 q12 -10 24 0" fill="none" stroke="#2b1a0e" strokeWidth="2" strokeLinecap="round" />
-        <path d="M134 98 l-4 -3 M186 98 l4 -3" stroke="#2b1a0e" strokeWidth="2.5" strokeLinecap="round" />
-        {/* nariz, bochechas e boca */}
-        <path d="M158 114 q2 3 4 0" fill="none" stroke="#c98558" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="136" cy="118" r="8" fill="url(#bochecha)" /><circle cx="184" cy="118" r="8" fill="url(#bochecha)" />
-        <path d="M146 123 q14 18 28 0 q-14 4 -28 0z" fill="#b03a3a" />
-        <path d="M148 124 q12 3 24 0 q-1 4 -12 4 q-10 0 -12 -4z" fill="#fff" />
-        <path d="M154 130 q6 5 12 0 q-6 -2 -12 0z" fill="#ff8a8a" />
+        <path d="M136 88 q9 -6 19 -2" fill="none" stroke="#3b2418" strokeWidth="3.5" strokeLinecap="round" />
+        <path d="M165 86 q10 -4 19 2" fill="none" stroke="#3b2418" strokeWidth="3.5" strokeLinecap="round" />
+        {/* olhos grandes e brilhantes */}
+        <ellipse cx="146" cy="103" rx="11" ry="12.5" fill="#fff" />
+        <ellipse cx="174" cy="103" rx="11" ry="12.5" fill="#fff" />
+        <circle cx="147" cy="104" r="10" fill="url(#iris)" /><circle cx="173" cy="104" r="10" fill="url(#iris)" />
+        <circle cx="147" cy="104" r="5.5" fill="#150b05" /><circle cx="173" cy="104" r="5.5" fill="#150b05" />
+        <circle cx="151" cy="99.5" r="3.6" fill="#fff" /><circle cx="177" cy="99.5" r="3.6" fill="#fff" />
+        <circle cx="143.5" cy="108.5" r="1.8" fill="#fff" /><circle cx="169.5" cy="108.5" r="1.8" fill="#fff" />
+        <path d="M135 97 q11 -9 22 -1" fill="none" stroke="#24150c" strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M163 96 q11 -8 22 1" fill="none" stroke="#24150c" strokeWidth="2.2" strokeLinecap="round" />
+        {/* nariz, bochechas e sorriso */}
+        <ellipse cx="160" cy="116" rx="3.5" ry="2.6" fill="#e59a72" opacity=".8" />
+        <circle cx="134" cy="119" r="9" fill="url(#bochecha)" /><circle cx="186" cy="119" r="9" fill="url(#bochecha)" />
+        <path d="M149 126 q11 8 22 0" fill="none" stroke="#c2574a" strokeWidth="3" strokeLinecap="round" />
       </g>
       {/* lancheira */}
       <g>
