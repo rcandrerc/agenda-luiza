@@ -157,3 +157,8 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .dia.sel .bolinha.futuro { background: #fff; }
 .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--suave); margin-top: 4px; }
 .legenda span { display: inline-flex; align-items: center; gap: 5px; }
+
+.topo-botoes { display: flex; gap: 8px; align-items: center; }
+.passos { background: var(--superficie); color: var(--texto); border-radius: 20px; padding: 20px; max-width: 380px; display: flex; flex-direction: column; gap: 12px; }
+.passos h2 { font-size: 22px; }
+.passos ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }

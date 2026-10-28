@@ -1,5 +1,6 @@
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
+import Instalar from './Instalar';
 
 export default function Topo({ titulo, feitas, total, semProgresso }) {
   const pct = total ? Math.round((feitas / total) * 100) : 0;
@@ -8,7 +9,10 @@ export default function Topo({ titulo, feitas, total, semProgresso }) {
     <header className="topo">
       <div className="topo-linha">
         <span className="data">{data}</span>
-        <button className="sair" onClick={() => signOut(auth)}>Sair</button>
+        <div className="topo-botoes">
+          <Instalar />
+          <button className="sair" onClick={() => signOut(auth)}>Sair</button>
+        </div>
       </div>
       <h1>{titulo}</h1>
       {!semProgresso && (

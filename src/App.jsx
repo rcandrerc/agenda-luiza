@@ -7,6 +7,7 @@ import TelaLuiza from './TelaLuiza';
 import TelaPais from './TelaPais';
 import Ilustracao from './Ilustracao';
 import Calendario from './Calendario';
+import Instalar from './Instalar';
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined);
@@ -131,6 +132,7 @@ function Login() {
       </button>
       {erro && <p className="erro">{erro}</p>}
       <p className="nota">Acesso só para a família.</p>
+      <Instalar className="link" />
     </Entrada>
   );
 }
