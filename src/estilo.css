@@ -109,7 +109,7 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 
 /* Telas de entrada */
 .tela.entrada { background: var(--superficie); }
-.entrada-topo { background: linear-gradient(160deg, #3aa3cf 0%, var(--ceu) 55%, #276f93 100%); color: #fff; padding: calc(env(safe-area-inset-top, 0px) + 56px) 28px 44px; border-radius: 0 0 36px 36px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.entrada-topo { background: linear-gradient(160deg, #3aa3cf 0%, var(--ceu) 55%, #276f93 100%); color: #fff; padding: calc(env(safe-area-inset-top, 0px) + 28px) 24px 36px; border-radius: 0 0 36px 36px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .entrada-topo h1 { font-size: 36px; }
 .entrada-topo p { margin: 0; font-size: 17px; opacity: .92; max-width: 24ch; }
 .selo-logo { width: 96px; height: 96px; border-radius: 28px; background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 52px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
@@ -135,3 +135,4 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .editor { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 14px; background: var(--superficie-2); border: 1px dashed var(--linha); }
 .marca { display: flex; align-items: center; gap: 10px; font-weight: 700; }
 .marca input { width: 22px; height: 22px; padding: 0; }
+.ilustracao { width: min(100%, 340px); height: auto; margin-bottom: -4px; }

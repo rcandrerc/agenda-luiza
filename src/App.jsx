@@ -5,6 +5,7 @@ import { MAX_PAIS } from './familia';
 import { entrarNaFamilia, limparFotosVencidas, useFamilia } from './dados';
 import TelaLuiza from './TelaLuiza';
 import TelaPais from './TelaPais';
+import Ilustracao from './Ilustracao';
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined);
@@ -121,7 +122,7 @@ function Entrada({ icone, titulo, texto, children }) {
   return (
     <div className="tela entrada">
       <div className="entrada-topo">
-        <div className="selo-logo" aria-hidden="true">{icone}</div>
+        {icone === '✅' ? <Ilustracao /> : <div className="selo-logo" aria-hidden="true">{icone}</div>}
         <h1>{titulo}</h1>
         <p>{texto}</p>
       </div>
