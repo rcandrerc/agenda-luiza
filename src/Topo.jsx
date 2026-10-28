@@ -1,7 +1,7 @@
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
 
-export default function Topo({ titulo, feitas, total }) {
+export default function Topo({ titulo, feitas, total, semProgresso }) {
   const pct = total ? Math.round((feitas / total) * 100) : 0;
   const data = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   return (
@@ -11,10 +11,12 @@ export default function Topo({ titulo, feitas, total }) {
         <button className="sair" onClick={() => signOut(auth)}>Sair</button>
       </div>
       <h1>{titulo}</h1>
-      <div className="progresso">
-        <div className="barra"><i style={{ width: `${pct}%` }} /></div>
-        <b>{feitas}/{total}</b>
-      </div>
+      {!semProgresso && (
+        <div className="progresso">
+          <div className="barra"><i style={{ width: `${pct}%` }} /></div>
+          <b>{feitas}/{total}</b>
+        </div>
+      )}
     </header>
   );
 }

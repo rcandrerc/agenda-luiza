@@ -136,3 +136,24 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .marca { display: flex; align-items: center; gap: 10px; font-weight: 700; }
 .marca input { width: 22px; height: 22px; padding: 0; }
 .ilustracao { width: min(100%, 340px); height: auto; margin-bottom: -4px; }
+
+/* Calendário e abas */
+.abas { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 520px); display: grid; grid-template-columns: 1fr 1fr; background: var(--superficie); border-top: 1px solid var(--linha); padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 5; }
+.abas button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 10px; border: 0; background: none; color: var(--suave); font-weight: 800; font-size: 13px; }
+.abas button span { font-size: 22px; }
+.abas button.ativa { color: var(--ceu); }
+.tela .conteudo { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 92px); }
+.mes-nav { display: flex; align-items: center; justify-content: space-between; }
+.mes-nav h2 { text-transform: capitalize; font-size: 18px; letter-spacing: 0; color: var(--texto); }
+.mes-nav button { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--linha); background: var(--superficie-2); font-size: 22px; color: var(--texto); padding: 0; }
+.calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; }
+.calendario .cab { text-align: center; font-size: 12px; font-weight: 800; color: var(--suave); padding: 4px 0; }
+.dia { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 0 6px; border-radius: 12px; border: 1px solid transparent; background: var(--superficie-2); color: var(--texto); font-weight: 700; font-variant-numeric: tabular-nums; }
+.dia.hoje { border-color: var(--ceu); }
+.dia.sel { background: var(--ceu); color: #fff; }
+.bolinha { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: transparent; }
+.bolinha.ok { background: var(--feito); } .bolinha.parcial { background: var(--casa); }
+.bolinha.falta { background: var(--erro); } .bolinha.futuro { background: var(--ceu); }
+.dia.sel .bolinha.futuro { background: #fff; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--suave); margin-top: 4px; }
+.legenda span { display: inline-flex; align-items: center; gap: 5px; }

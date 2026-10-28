@@ -12,7 +12,7 @@ import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS, VALOR_SEMANAL } fro
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
 
-function formatarDia(d) {
+export function formatarDia(d) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
@@ -59,6 +59,15 @@ export function apareceNoDia(t, dia) {
   return Boolean(t.diaria);
 }
 
+// Como apareceNoDia, mas ignora dias anteriores à criação de uma tarefa
+// que se repete (para o calendário não mostrar pendências que nunca existiram).
+export function tarefaDoDia(t, dia) {
+  if (!apareceNoDia(t, dia)) return false;
+  if (t.data) return true;
+  const criada = t.criadaEm?.toDate?.();
+  return !criada || formatarDia(criada) <= dia;
+}
+
 export function descreverQuando(t) {
   if (t.data) return `Só ${new Date(`${t.data}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}`;
   if (!t.dias?.length || t.dias.length === 7) return 'Todo dia';
@@ -84,6 +93,13 @@ export function useConclusoes(dia) {
   const lista = useColecao(() => query(collection(db, 'conclusoes'), where('dia', '==', dia)), [dia]);
   if (!lista) return null;
   return Object.fromEntries(lista.map((c) => [c.tarefaId, c]));
+}
+
+export function useConclusoesPeriodo(de, ate) {
+  return useColecao(
+    () => query(collection(db, 'conclusoes'), where('dia', '>=', de), where('dia', '<=', ate)),
+    [de, ate],
+  );
 }
 
 export function useConclusoesSemana(dia) {

@@ -6,6 +6,7 @@ import { entrarNaFamilia, limparFotosVencidas, useFamilia } from './dados';
 import TelaLuiza from './TelaLuiza';
 import TelaPais from './TelaPais';
 import Ilustracao from './Ilustracao';
+import Calendario from './Calendario';
 
 export default function App() {
   const [usuario, setUsuario] = useState(undefined);
@@ -39,10 +40,27 @@ function Logado({ usuario }) {
   }, [membro?.papel]);
 
   if (!familia) return <Aviso titulo="Carregando…" />;
-  if (membro) {
-    return membro.papel === 'filha' ? <TelaLuiza membro={membro} /> : <TelaPais membro={membro} />;
-  }
+  if (membro) return <Principal membro={membro} />;
   return <Escolha usuario={usuario} familia={familia} />;
+}
+
+// Telas de quem já é da família, com a barra para alternar entre Hoje e Calendário.
+function Principal({ membro }) {
+  const [aba, setAba] = useState('hoje');
+  return (
+    <>
+      {aba === 'calendario' ? <Calendario />
+        : membro.papel === 'filha' ? <TelaLuiza membro={membro} /> : <TelaPais membro={membro} />}
+      <nav className="abas" aria-label="Seções">
+        <button className={aba === 'hoje' ? 'ativa' : ''} aria-current={aba === 'hoje'} onClick={() => setAba('hoje')}>
+          <span aria-hidden="true">✅</span>Hoje
+        </button>
+        <button className={aba === 'calendario' ? 'ativa' : ''} aria-current={aba === 'calendario'} onClick={() => setAba('calendario')}>
+          <span aria-hidden="true">📅</span>Calendário
+        </button>
+      </nav>
+    </>
+  );
 }
 
 // Primeira vez de cada pessoa: escolhe quem é. Fica definitivo.
@@ -106,7 +124,7 @@ function Login() {
   }
 
   return (
-    <Entrada icone="✅" titulo="Tarefas da Luiza" texto="As tarefas do dia, juntas com o papai e a mamãe.">
+    <Entrada icone="✅" titulo="Tarefas da Lulu" texto="Rotina diária, mesada e acompanhamento da família.">
       <button className="google" disabled={enviando} onClick={entrar}>
         <IconeGoogle />
         {enviando ? 'Entrando…' : 'Entrar com o Google'}
