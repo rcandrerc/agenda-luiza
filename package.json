@@ -1,0 +1,29 @@
+{
+  "name": "agenda-luiza",
+  "version": "1.0.0",
+  "description": "App de tarefas da Luiza, compartilhado com os pais",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcandrerc/agenda-luiza.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rcandrerc/agenda-luiza/issues"
+  },
+  "homepage": "https://github.com/rcandrerc/agenda-luiza#readme",
+  "dependencies": {
+    "firebase": "^12.19.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.2.0",
+    "vite": "^7.3.7"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// Só a família entra. Os e-mails aqui precisam ser os mesmos de src/familia.js.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function email() {
+      return request.auth != null && request.auth.token.email != null
+        ? request.auth.token.email.lower() : '';
+    }
+    function filha() { return email() in ['luiza@exemplo.com']; }
+    function pais() { return email() in ['papai@exemplo.com', 'mamae@exemplo.com']; }
+    function familia() { return filha() || pais(); }
+
+    // Só os pais criam e removem tarefas.
+    match /tarefas/{id} {
+      allow read: if familia();
+      allow write: if pais();
+    }
+
+    match /conclusoes/{id} {
+      allow read, write: if familia();
+    }
+
+    // Fotos pequenas (o app já comprime antes de enviar).
+    match /fotos/{id} {
+      allow read, delete: if familia();
+      allow create: if familia()
+        && request.resource.data.imagem is string
+        && request.resource.data.imagem.size() < 900000;
+    }
+  }
+}
