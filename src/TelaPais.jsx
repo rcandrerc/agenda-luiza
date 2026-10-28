@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import Topo from './Topo';
 import {
-  apareceNoDia, criarTarefa, criarTarefasIniciais, descreverQuando, emojiSugerido, hoje,
-  removerTarefa, useConclusoes, useFotos, useTarefas,
+  apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, descreverQuando, emojiSugerido, hoje,
+  removerTarefa, useConclusoes, useConclusoesSemana, useFotos, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
+import Mesada from './Mesada';
 
 const NOMES_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const EMOJIS = ['⭐', '🛏️', '🧺', '🐱', '🍎', '🎒', '🪥', '🛁', '🧸', '📚', '✏️', '🌱', '🍽️', '🧹', '🗑️', '🐶'];
@@ -14,12 +15,14 @@ export default function TelaPais() {
   const todas = useTarefas();
   const conclusoes = useConclusoes(dia);
   const fotos = useFotos(dia);
+  const semana = useConclusoesSemana(dia);
   const [ampliada, setAmpliada] = useState(null);
 
   const tarefas = todas && todas.filter((t) => apareceNoDia(t, dia));
-  if (!tarefas || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
+  if (!tarefas || !semana || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
 
   const feitas = tarefas.filter((t) => conclusoes[t.id]).length;
+  const mesada = calcularMesada(todas, semana, dia);
   const comFoto = tarefas.filter((t) => fotos[conclusoes[t.id]?.fotoId]);
 
   return (
@@ -31,6 +34,8 @@ export default function TelaPais() {
           <div className="numero"><b>{tarefas.length - feitas}</b><span>faltando</span></div>
         </div>
 
+        <Mesada mesada={mesada} />
+
         <section className="grupo">
           <h2>Tarefas de hoje</h2>
           {tarefas.length === 0 ? (
@@ -40,21 +45,7 @@ export default function TelaPais() {
             </div>
           ) : (
             <div className="lista">
-              {tarefas.map((t) => {
-                const c = conclusoes[t.id];
-                return (
-                  <div key={t.id} className="linha">
-                    <span className="emoji" aria-hidden="true">{t.emoji}</span>
-                    <div className="linha-texto">
-                      <div className="nome">{t.nome}</div>
-                      <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
-                      <span className="etiqueta">{descreverQuando(t)}</span>
-                    </div>
-                    <span className={`selo ${c ? 'ok' : ''}`}>{c ? `Feita ${hora(c.feitaEm)}` : 'Pendente'}</span>
-                    <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
-                  </div>
-                );
-              })}
+              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} deHoje />)}
             </div>
           )}
         </section>
@@ -80,17 +71,7 @@ export default function TelaPais() {
             <h2>Outras tarefas</h2>
             <p className="dica">Não aparecem hoje, mas já estão programadas.</p>
             <div className="lista">
-              {todas.filter((t) => !apareceNoDia(t, dia)).map((t) => (
-                <div key={t.id} className="linha">
-                  <span className="emoji" aria-hidden="true">{t.emoji}</span>
-                  <div className="linha-texto">
-                    <div className="nome">{t.nome}</div>
-                    <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
-                    <span className="etiqueta">{descreverQuando(t)}</span>
-                  </div>
-                  <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
-                </div>
-              ))}
+              {todas.filter((t) => !apareceNoDia(t, dia)).map((t) => <ItemTarefa key={t.id} t={t} />)}
             </div>
           </section>
         )}
@@ -108,12 +89,66 @@ export default function TelaPais() {
   );
 }
 
+function ItemTarefa({ t, c, deHoje }) {
+  const [editando, setEditando] = useState(false);
+  return (
+    <>
+      <div className="linha">
+        <span className="emoji" aria-hidden="true">{t.emoji}</span>
+        <div className="linha-texto">
+          <div className="nome">{t.nome}</div>
+          <span className={`etiqueta ${t.categoria}`}>{t.categoria === 'escola' ? 'Escola' : 'Casa'}</span>
+          <span className="etiqueta">{descreverQuando(t)}</span>
+          {t.vale && <span className="etiqueta">💰 Vale dinheiro</span>}
+          <button className="editar" onClick={() => setEditando(!editando)}>{editando ? 'Fechar' : 'Editar'}</button>
+        </div>
+        {deHoje && <span className={`selo ${c ? 'ok' : ''}`}>{c ? `Feita ${hora(c.feitaEm)}` : 'Pendente'}</span>}
+        <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
+      </div>
+      {editando && <EditorTarefa t={t} aoSalvar={() => setEditando(false)} />}
+    </>
+  );
+}
+
+function EditorTarefa({ t, aoSalvar }) {
+  const [vale, setVale] = useState(Boolean(t.vale));
+  const [dias, setDias] = useState(t.dias?.length ? t.dias : [0, 1, 2, 3, 4, 5, 6]);
+  const umDia = Boolean(t.data);
+
+  async function salvar() {
+    if (!umDia && dias.length === 0) return;
+    await atualizarTarefa(t.id, umDia ? { vale } : { vale, dias: [...dias].sort(), diaria: true });
+    aoSalvar();
+  }
+
+  return (
+    <div className="editor">
+      {!umDia && <SeletorDias dias={dias} setDias={setDias} />}
+      <label className="marca"><input type="checkbox" checked={vale} onChange={(e) => setVale(e.target.checked)} /> Vale dinheiro (entra na mesada)</label>
+      <button className="botao" onClick={salvar}>Salvar</button>
+    </div>
+  );
+}
+
+function SeletorDias({ dias, setDias }) {
+  return (
+    <div className="dias" role="group" aria-label="Dias da semana">
+      {NOMES_DIAS.map((n, i) => (
+        <button type="button" key={n} aria-pressed={dias.includes(i)}
+          className={dias.includes(i) ? 'escolhido' : ''}
+          onClick={() => setDias(dias.includes(i) ? dias.filter((x) => x !== i) : [...dias, i])}>{n}</button>
+      ))}
+    </div>
+  );
+}
+
 function NovaTarefa({ dia }) {
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('casa');
   const [repete, setRepete] = useState(true);
   const [dias, setDias] = useState([1, 2, 3, 4, 5]);
   const [data, setData] = useState(dia);
+  const [vale, setVale] = useState(false);
   const [emoji, setEmoji] = useState(null);
   const emojiFinal = emoji ?? emojiSugerido(nome);
 
@@ -123,7 +158,7 @@ function NovaTarefa({ dia }) {
     if (repete && dias.length === 0) return;
     await criarTarefa({
       nome: nome.trim(), emoji: emojiFinal, categoria,
-      dias: repete ? [...dias].sort() : null, data: repete ? null : data,
+      dias: repete ? [...dias].sort() : null, data: repete ? null : data, vale,
     });
     setNome('');
     setEmoji(null);
@@ -145,16 +180,11 @@ function NovaTarefa({ dia }) {
           </select>
         </div>
         {repete ? (
-          <div className="dias" role="group" aria-label="Dias da semana">
-            {NOMES_DIAS.map((n, i) => (
-              <button type="button" key={n} aria-pressed={dias.includes(i)}
-                className={dias.includes(i) ? 'escolhido' : ''}
-                onClick={() => setDias(dias.includes(i) ? dias.filter((x) => x !== i) : [...dias, i])}>{n}</button>
-            ))}
-          </div>
+          <SeletorDias dias={dias} setDias={setDias} />
         ) : (
           <input id="nova-data" type="date" value={data} min={dia} onChange={(e) => setData(e.target.value)} required aria-label="Dia da tarefa" />
         )}
+        <label className="marca"><input type="checkbox" checked={vale} onChange={(e) => setVale(e.target.checked)} /> Vale dinheiro (entra na mesada)</label>
         <div className="emojis" role="radiogroup" aria-label="Emoji">
           {EMOJIS.map((em) => (
             <button type="button" key={em} role="radio" aria-checked={em === emojiFinal}

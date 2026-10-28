@@ -120,3 +120,18 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .nota { margin: 0; text-align: center; color: var(--suave); font-size: 14px; }
 .link { background: none; border: 0; color: var(--suave); text-decoration: underline; padding: 8px; }
 .entrada-base .erro { text-align: center; font-weight: 600; font-size: 14px; }
+
+/* Mesada */
+.mesada { background: var(--destaque); color: var(--destaque-tinta); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.mesada-linha { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.mesada-rotulo { font-weight: 800; }
+.mesada-linha b { font: 800 26px var(--titulo); font-variant-numeric: tabular-nums; }
+.mesada .barra { background: rgba(0,0,0,.14); height: 10px; }
+.mesada .barra i { background: var(--destaque-tinta); }
+.mesada-nota { margin: 0; font-size: 13px; opacity: .85; }
+.ganho { font-size: 13px; font-weight: 800; color: var(--suave); }
+.ganho.ok { color: var(--feito); }
+.editar { background: none; border: 0; color: var(--ceu); font-size: 12px; font-weight: 800; padding: 2px 4px; }
+.editor { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 14px; background: var(--superficie-2); border: 1px dashed var(--linha); }
+.marca { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.marca input { width: 22px; height: 22px; padding: 0; }

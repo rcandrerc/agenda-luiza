@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import Topo from './Topo';
-import { desmarcar, enviarFoto, hoje, marcar, useConclusoes, useFotos, useTarefasDoDia } from './dados';
+import {
+  calcularMesada, desmarcar, dinheiro, enviarFoto, hoje, marcar, useConclusoes, useConclusoesSemana, useFotos, useTarefas, useTarefasDoDia,
+} from './dados';
+import Mesada from './Mesada';
 
 const GRUPOS = [
   { id: 'casa', nome: 'Casa' },
@@ -9,19 +12,23 @@ const GRUPOS = [
 
 export default function TelaLuiza({ membro }) {
   const dia = hoje();
+  const todas = useTarefas();
   const tarefas = useTarefasDoDia(dia);
+  const semana = useConclusoesSemana(dia);
   const conclusoes = useConclusoes(dia);
   const fotos = useFotos(dia);
 
-  if (!tarefas || !conclusoes || !fotos) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
+  if (!tarefas || !todas || !semana || !conclusoes || !fotos) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
 
   const feitas = tarefas.filter((t) => conclusoes[t.id]).length;
   const faltam = tarefas.length - feitas;
+  const mesada = calcularMesada(todas, semana, dia);
 
   return (
     <div className="tela">
       <Topo titulo={`Oi, ${membro.nome}!`} feitas={feitas} total={tarefas.length} />
       <main className="conteudo">
+        <Mesada mesada={mesada} />
         {tarefas.length === 0 && <p className="vazio">Nenhuma tarefa hoje. Aproveita o dia! 🌈</p>}
         {GRUPOS.map((g) => {
           const itens = tarefas.filter((t) => t.categoria === g.id);
@@ -31,7 +38,7 @@ export default function TelaLuiza({ membro }) {
               <h2><span className={`ponto ${g.id}`} />{g.nome}</h2>
               <div className="lista">
                 {itens.map((t) => (
-                  <Tarefa key={t.id} tarefa={t} dia={dia} conclusao={conclusoes[t.id]}
+                  <Tarefa key={t.id} tarefa={t} dia={dia} conclusao={conclusoes[t.id]} valor={t.vale ? mesada.porCaixinha : 0}
                     foto={fotos[conclusoes[t.id]?.fotoId]} />
                 ))}
               </div>
@@ -48,7 +55,7 @@ export default function TelaLuiza({ membro }) {
   );
 }
 
-function Tarefa({ tarefa, dia, conclusao, foto }) {
+function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
   const [enviando, setEnviando] = useState(false);
   const feita = Boolean(conclusao);
 
@@ -79,6 +86,7 @@ function Tarefa({ tarefa, dia, conclusao, foto }) {
         <div>
           <div className="nome">{tarefa.nome}</div>
           {tarefa.detalhe && <div className="detalhe">{tarefa.detalhe}</div>}
+          {valor > 0 && <div className={`ganho ${feita ? 'ok' : ''}`}>{feita ? '✓ ' : ''}+{dinheiro(valor)}</div>}
         </div>
       </div>
       <label className={`camera ${foto ? 'tem' : ''}`} title="Tirar foto">

@@ -4,18 +4,36 @@ import {
   runTransaction, serverTimestamp, setDoc, Timestamp, updateDoc, where, writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS } from './familia';
+import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS, VALOR_SEMANAL } from './familia';
 
 // Coleções no Firestore:
 //   config/familia       { filha: {uid, nome} ou {}, pais: {uid: nome} }
-//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, ativa, criadaEm }
+//   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, vale, ativa, criadaEm }
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
 
-export function hoje() {
-  const d = new Date();
+function formatarDia(d) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+export function hoje() {
+  return formatarDia(new Date());
+}
+
+export function dinheiro(valor) {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// Os sete dias (segunda a domingo) da semana que contém o dia dado.
+export function diasDaSemana(dia) {
+  const base = new Date(`${dia}T12:00:00`);
+  const desdeSegunda = (base.getDay() + 6) % 7;
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() - desdeSegunda + i);
+    return formatarDia(d);
+  });
 }
 
 function useColecao(q, deps) {
@@ -68,6 +86,26 @@ export function useConclusoes(dia) {
   return Object.fromEntries(lista.map((c) => [c.tarefaId, c]));
 }
 
+export function useConclusoesSemana(dia) {
+  const dias = diasDaSemana(dia);
+  return useColecao(
+    () => query(collection(db, 'conclusoes'), where('dia', '>=', dias[0]), where('dia', '<=', dias[6])),
+    [dias[0]],
+  );
+}
+
+// A mesada da semana é dividida igualmente entre todas as caixinhas das
+// tarefas que valem dinheiro (cada tarefa conta uma vez por dia em que aparece).
+export function calcularMesada(tarefas, conclusoesSemana, dia) {
+  const dias = diasDaSemana(dia);
+  const pagas = tarefas.filter((t) => t.vale);
+  const total = pagas.reduce((n, t) => n + dias.filter((d) => apareceNoDia(t, d)).length, 0);
+  const ids = new Set(pagas.map((t) => t.id));
+  const feitas = Math.min(total, conclusoesSemana.filter((c) => ids.has(c.tarefaId)).length);
+  const porCaixinha = total ? VALOR_SEMANAL / total : 0;
+  return { total, feitas, porCaixinha, ganho: feitas * porCaixinha, maximo: VALOR_SEMANAL };
+}
+
 export function useFotos(dia) {
   const lista = useColecao(() => query(collection(db, 'fotos'), where('dia', '==', dia)), [dia]);
   if (!lista) return null;
@@ -110,13 +148,17 @@ export async function limparFotosVencidas() {
 
 // dias: números de 0 (domingo) a 6 (sábado) para repetir toda semana;
 // data: "AAAA-MM-DD" para uma tarefa de um dia só (pode ser amanhã).
-export async function criarTarefa({ nome, emoji, categoria, dias, data }) {
+export async function criarTarefa({ nome, emoji, categoria, dias, data, vale }) {
   const repete = !data;
   await addDoc(collection(db, 'tarefas'), {
     nome, emoji, categoria, detalhe: '',
     diaria: repete, dias: repete ? dias : null, data: data ?? null,
-    ativa: true, criadaEm: serverTimestamp(),
+    vale: Boolean(vale), ativa: true, criadaEm: serverTimestamp(),
   });
+}
+
+export async function atualizarTarefa(id, campos) {
+  await updateDoc(doc(db, 'tarefas', id), campos);
 }
 
 export async function removerTarefa(id) {
