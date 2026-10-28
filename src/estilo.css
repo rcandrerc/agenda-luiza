@@ -106,3 +106,17 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .emojis button.escolhido { border: 2px solid var(--ceu); background: var(--superficie); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Telas de entrada */
+.tela.entrada { background: var(--superficie); }
+.entrada-topo { background: linear-gradient(160deg, #3aa3cf 0%, var(--ceu) 55%, #276f93 100%); color: #fff; padding: calc(env(safe-area-inset-top, 0px) + 56px) 28px 44px; border-radius: 0 0 36px 36px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.entrada-topo h1 { font-size: 36px; }
+.entrada-topo p { margin: 0; font-size: 17px; opacity: .92; max-width: 24ch; }
+.selo-logo { width: 96px; height: 96px; border-radius: 28px; background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 52px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+.entrada-base { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 32px 28px calc(env(safe-area-inset-bottom, 0px) + 32px); }
+.google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--linha); background: var(--superficie); color: var(--texto); font-weight: 700; font-size: 17px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.google:disabled { opacity: .6; }
+.botao.grande { margin: 0; padding: 16px 18px; font-size: 17px; }
+.nota { margin: 0; text-align: center; color: var(--suave); font-size: 14px; }
+.link { background: none; border: 0; color: var(--suave); text-decoration: underline; padding: 8px; }
+.entrada-base .erro { text-align: center; font-weight: 600; font-size: 14px; }
