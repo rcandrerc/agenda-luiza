@@ -6,6 +6,7 @@ import { entrarNaFamilia, limparFotosVencidas, useFamilia } from './dados';
 import TelaLuiza from './TelaLuiza';
 import TelaPais from './TelaPais';
 import Calendario from './Calendario';
+import Aulas from './Aulas';
 import Instalar from './Instalar';
 
 export default function App() {
@@ -50,6 +51,7 @@ function Principal({ membro }) {
   return (
     <>
       {aba === 'calendario' ? <Calendario />
+        : aba === 'aulas' ? <Aulas />
         : membro.papel === 'filha' ? <TelaLuiza membro={membro} /> : <TelaPais membro={membro} />}
       <nav className="abas" aria-label="Seções">
         <button className={aba === 'hoje' ? 'ativa' : ''} aria-current={aba === 'hoje'} onClick={() => setAba('hoje')}>
@@ -57,6 +59,9 @@ function Principal({ membro }) {
         </button>
         <button className={aba === 'calendario' ? 'ativa' : ''} aria-current={aba === 'calendario'} onClick={() => setAba('calendario')}>
           <span aria-hidden="true">📅</span>Calendário
+        </button>
+        <button className={aba === 'aulas' ? 'ativa' : ''} aria-current={aba === 'aulas'} onClick={() => setAba('aulas')}>
+          <span aria-hidden="true">📚</span>Aulas
         </button>
       </nav>
     </>
