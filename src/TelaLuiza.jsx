@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Topo from './Topo';
 import {
-  calcularMesada, descreverQuando, desmarcar, dinheiro, enviarFoto, hoje, marcar, useConclusoes, useConclusoesSemana, useFotos, urgenciaPrazo, useTarefas, useTarefasDoDia,
+  calcularMesada, descreverQuando, desmarcar, dinheiro, enviarFoto, hoje, useConclusoes, useConclusoesSemana, useFotos, urgenciaPrazo, useTarefas, useTarefasDoDia,
 } from './dados';
 import Mesada from './Mesada';
 
@@ -57,16 +57,20 @@ export default function TelaLuiza({ membro }) {
 
 function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
   const [enviando, setEnviando] = useState(false);
+  const [pedirFoto, setPedirFoto] = useState(false);
+  const entrada = useRef(null);
   const feita = Boolean(conclusao);
 
+  // Só dá para marcar como feita mandando a foto da tarefa.
   async function alternar() {
     if (feita) await desmarcar(tarefa.id, dia, conclusao);
-    else await marcar(tarefa.id, dia);
+    else setPedirFoto(true);
   }
 
   async function aoEscolherFoto(e) {
     const arquivo = e.target.files?.[0];
     e.target.value = '';
+    setPedirFoto(false);
     if (!arquivo) return;
     setEnviando(true);
     try {
@@ -92,8 +96,19 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
       </div>
       <label className={`camera ${foto ? 'tem' : ''}`} title="Tirar foto">
         {enviando ? <span className="girando" /> : foto ? <img src={foto.imagem} alt={`Foto de ${tarefa.nome}`} /> : <IconeCamera />}
-        <input type="file" accept="image/*" capture="environment" onChange={aoEscolherFoto} aria-label={`Foto de ${tarefa.nome}`} />
+        <input ref={entrada} type="file" accept="image/*" capture="environment" onChange={aoEscolherFoto} aria-label={`Foto de ${tarefa.nome}`} />
       </label>
+      {pedirFoto && (
+        <div className="ampliada" onClick={() => setPedirFoto(false)} role="dialog" aria-label="Tire uma foto da tarefa">
+          <div className="passos pedir-foto" onClick={(e) => e.stopPropagation()}>
+            <div className="pedir-foto-icone" aria-hidden="true">📸</div>
+            <h2>Tire uma foto da tarefa!</h2>
+            <p>Para marcar “{tarefa.nome}” como feita, mostre como ficou.</p>
+            <button className="botao" onClick={() => entrada.current?.click()}>Abrir a câmera</button>
+            <button className="link" onClick={() => setPedirFoto(false)}>Agora não</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

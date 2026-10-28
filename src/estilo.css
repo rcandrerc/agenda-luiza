@@ -207,3 +207,7 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
   .aula, .materia { background: hsl(var(--h) 35% 20%); color: hsl(var(--h) 70% 90%); }
   .aula.recreio { background: var(--superficie-2); color: var(--suave); }
 }
+
+.pedir-foto { text-align: center; align-items: stretch; }
+.pedir-foto p { margin: 0; color: var(--suave); }
+.pedir-foto-icone { font-size: 48px; }
