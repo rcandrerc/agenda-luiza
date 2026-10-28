@@ -1,15 +1,60 @@
 rules_version = '2';
 
-// Só a família entra. Os e-mails aqui precisam ser os mesmos de src/familia.js.
+// A família é formada por quem entra primeiro com a conta Google: uma Luiza e
+// até dois pais, gravados em config/familia. Depois que as vagas enchem, o
+// documento não aceita mais ninguém e quem não está nele não lê nem escreve nada.
 service cloud.firestore {
   match /databases/{database}/documents {
-    function email() {
-      return request.auth != null && request.auth.token.email != null
-        ? request.auth.token.email.lower() : '';
+    function config() {
+      return get(/databases/$(database)/documents/config/familia).data;
     }
-    function filha() { return email() in ['luiza@exemplo.com']; }
-    function pais() { return email() in ['papai@exemplo.com', 'mamae@exemplo.com']; }
+    function temConfig() {
+      return exists(/databases/$(database)/documents/config/familia);
+    }
+    function filha() {
+      return request.auth != null && temConfig() && config().filha.get('uid', '') == request.auth.uid;
+    }
+    function pais() {
+      return request.auth != null && temConfig() && request.auth.uid in config().pais;
+    }
     function familia() { return filha() || pais(); }
+
+    match /config/familia {
+      // Quem acabou de entrar precisa ver quais vagas ainda estão livres.
+      allow read: if request.auth != null;
+
+      // Primeira pessoa a entrar cria o documento já ocupando a sua vaga.
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['filha', 'pais'])
+        && (
+          (request.resource.data.filha.keys().hasOnly(['uid', 'nome'])
+            && request.resource.data.filha.uid == request.auth.uid
+            && request.resource.data.filha.nome is string
+            && request.resource.data.pais.size() == 0)
+          ||
+          (request.resource.data.filha.size() == 0
+            && request.resource.data.pais.keys().hasOnly([request.auth.uid])
+            && request.resource.data.pais[request.auth.uid] is string)
+        );
+
+      // Depois, cada pessoa só pode acrescentar a si mesma numa vaga livre.
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['filha', 'pais'])
+        && !(request.auth.uid in resource.data.pais)
+        && resource.data.filha.get('uid', '') != request.auth.uid
+        && (
+          (resource.data.filha.size() == 0
+            && request.resource.data.filha.keys().hasOnly(['uid', 'nome'])
+            && request.resource.data.filha.uid == request.auth.uid
+            && request.resource.data.filha.nome is string
+            && request.resource.data.pais == resource.data.pais)
+          ||
+          (request.resource.data.filha == resource.data.filha
+            && resource.data.pais.size() < 2
+            && request.resource.data.pais.diff(resource.data.pais).affectedKeys().hasOnly([request.auth.uid])
+            && request.resource.data.pais[request.auth.uid] is string)
+        );
+    }
 
     // Só os pais criam e removem tarefas.
     match /tarefas/{id} {

@@ -6,15 +6,15 @@ App de tarefas do dia da Luiza. Ela, o papai e a mamãe usam o mesmo app, cada u
 - **Celular dos pais:** quantas tarefas ela já fez, as fotos que mandou e um campo para criar tarefas novas (todo dia ou só hoje).
 - **Fotos que somem sozinhas:** cada foto é reduzida no celular antes de enviar (uns 200 a 300 KB) e é apagada 24 horas depois. Dá pra mudar o prazo em `src/familia.js`.
 
-Feito com React + Vite e Firebase (login por e-mail e banco Firestore). Funciona no plano grátis (Spark): as fotos ficam no próprio Firestore, sem precisar do Storage.
+Feito com React + Vite e Firebase (login com a conta Google e banco Firestore). Funciona no plano grátis (Spark): as fotos ficam no próprio Firestore, sem precisar do Storage.
 
 ## Como ligar no Firebase
 
 1. No [console do Firebase](https://console.firebase.google.com), crie um projeto novo (ex.: `tarefas-da-luiza`).
-2. **Authentication** > Começar > ative **E-mail/senha**. Em **Usuários**, crie uma conta para a Luiza, uma para o papai e uma para a mamãe.
+2. **Authentication** > Começar > ative o provedor **Google**. Não precisa criar usuários: cada um entra com a própria conta Google.
 3. **Firestore Database** > Criar banco de dados (pode ser na região `southamerica-east1`, São Paulo).
 4. **Configurações do projeto** > Geral > Seus apps > adicione um app **Web**. Copie os valores mostrados para um arquivo `.env` (use o `.env.example` como modelo).
-5. Coloque os e-mails das três contas em `src/familia.js` **e** em `firestore.rules` (os dois precisam bater).
+5. Quem entra primeiro escolhe "Eu sou a Luiza" ou "Eu sou o papai ou a mamãe". São 3 vagas (Luiza e até dois pais) e a escolha é definitiva; depois que as vagas enchem, mais ninguém consegue entrar. Mande o endereço do app só para a família e entrem os três logo.
 6. Publique as regras e o app:
 
    ```bash
@@ -28,7 +28,7 @@ Feito com React + Vite e Firebase (login por e-mail e banco Firestore). Funciona
 
    No fim aparece o endereço do app, algo como `https://tarefas-da-luiza.web.app`.
 
-7. Entre com a conta de um dos pais e toque em **Criar as tarefas de sempre** para cadastrar as tarefas iniciais.
+7. Entre com a conta de um dos pais (depois de escolher o papel) e toque em **Criar as tarefas de sempre** para cadastrar as tarefas iniciais.
 
 ### Instalar no celular
 
@@ -52,7 +52,7 @@ npm run dev
 
 | Arquivo | O que faz |
 | --- | --- |
-| `src/familia.js` | E-mails da família, tarefas iniciais e prazo das fotos |
+| `src/familia.js` | Tarefas iniciais, prazo das fotos e limite de pais |
 | `src/dados.js` | Leitura e gravação no Firestore, compressão e limpeza das fotos |
 | `src/TelaLuiza.jsx` | Tela da Luiza |
 | `src/TelaPais.jsx` | Tela dos pais |

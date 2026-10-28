@@ -1,15 +1,7 @@
-// Quem pode usar o app. O e-mail precisa ser o mesmo da conta criada no
-// Firebase Authentication. Se mudar aqui, mude também em firestore.rules.
-export const FAMILIA = [
-  { email: 'luiza@exemplo.com', nome: 'Luiza', papel: 'filha' },
-  { email: 'papai@exemplo.com', nome: 'Papai', papel: 'pais' },
-  { email: 'mamae@exemplo.com', nome: 'Mamãe', papel: 'pais' },
-];
-
-export function membroPorEmail(email) {
-  if (!email) return null;
-  return FAMILIA.find((m) => m.email.toLowerCase() === email.toLowerCase()) ?? null;
-}
+// A família não é cadastrada aqui: as três primeiras pessoas que entram com a
+// conta Google escolhem o papel (Luiza, papai ou mamãe) e ficam gravadas em
+// config/familia no Firestore. Depois disso ninguém mais consegue entrar.
+export const MAX_PAIS = 2;
 
 // Por quanto tempo uma foto fica guardada antes de ser apagada.
 export const HORAS_ATE_FOTO_EXPIRAR = 24;

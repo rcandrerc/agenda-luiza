@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
   addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, query,
-  serverTimestamp, setDoc, Timestamp, updateDoc, where, writeBatch,
+  runTransaction, serverTimestamp, setDoc, Timestamp, updateDoc, where, writeBatch,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { HORAS_ATE_FOTO_EXPIRAR, TAREFAS_INICIAIS } from './familia';
+import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS } from './familia';
 
 // Coleções no Firestore:
+//   config/familia       { filha: {uid, nome} ou {}, pais: {uid: nome} }
 //   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, data, ativa, criadaEm }
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
@@ -128,4 +129,33 @@ export function emojiSugerido(nome) {
     [/roupa/, '🧺'], [/louça|prato/, '🍽️'], [/quarto|arrumar/, '🧹'], [/lixo/, '🗑️'],
   ];
   return regras.find(([r]) => r.test(n))?.[1] ?? '⭐';
+}
+
+// Quem já ocupa as vagas da família. Fica null enquanto carrega.
+export function useFamilia() {
+  const [familia, setFamilia] = useState(null);
+  useEffect(() => {
+    return onSnapshot(doc(db, 'config', 'familia'), (snap) => {
+      const d = snap.data() ?? {};
+      setFamilia({ filha: d.filha ?? {}, pais: d.pais ?? {} });
+    });
+  }, []);
+  return familia;
+}
+
+// Reserva uma vaga para o usuário. A transação garante que, mesmo se duas
+// pessoas tocarem ao mesmo tempo, só entram uma Luiza e no máximo dois pais.
+export async function entrarNaFamilia(uid, papel, nome) {
+  const ref = doc(db, 'config', 'familia');
+  await runTransaction(db, async (tx) => {
+    const d = (await tx.get(ref)).data() ?? { filha: {}, pais: {} };
+    if (uid === d.filha?.uid || uid in d.pais) return;
+    if (papel === 'filha') {
+      if (d.filha?.uid) throw new Error('vaga-ocupada');
+      tx.set(ref, { filha: { uid, nome }, pais: d.pais });
+    } else {
+      if (Object.keys(d.pais).length >= MAX_PAIS) throw new Error('vaga-ocupada');
+      tx.set(ref, { filha: d.filha ?? {}, pais: { ...d.pais, [uid]: nome } });
+    }
+  });
 }
