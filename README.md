@@ -4,7 +4,7 @@ App de tarefas do dia da Luiza. Ela, o papai e a mamãe usam o mesmo app, cada u
 
 - **Celular da Luiza:** lista do dia separada em Casa e Escola, cada tarefa com um emoji. Ela marca a caixinha quando termina e pode tirar uma foto.
 - **Celular dos pais:** quantas tarefas ela já fez, as fotos que mandou e um campo para criar tarefas novas (todo dia ou só hoje).
-- **Fotos que somem sozinhas:** cada foto é reduzida no celular antes de enviar (uns 200 a 300 KB) e é apagada 24 horas depois. Dá pra mudar o prazo em `src/familia.js`.
+- **Fotos que somem sozinhas:** cada foto é reduzida no celular antes de enviar (uns 200 a 300 KB) e é apagada 18 horas depois. Dá pra mudar o prazo em `src/familia.js`.
 
 Feito com React + Vite e Firebase (login com a conta Google e banco Firestore). Funciona no plano grátis (Spark): as fotos ficam no próprio Firestore, sem precisar do Storage.
 

@@ -63,6 +63,7 @@ export default function TelaPais() {
               return (
                 <button key={t.id} className="foto" onClick={() => setAmpliada({ tarefa: t, foto: f })}>
                   <img src={f.imagem} alt={`Foto de ${t.nome}`} />
+                  <span className="foto-data">{dataHora(f.criadaEm)}</span>
                 </button>
               );
             })}
@@ -85,7 +86,7 @@ export default function TelaPais() {
       {ampliada && (
         <div className="ampliada" onClick={() => setAmpliada(null)} role="dialog" aria-label={`Foto de ${ampliada.tarefa.nome}`}>
           <img src={ampliada.foto.imagem} alt={`Foto de ${ampliada.tarefa.nome}`} />
-          <p>{ampliada.tarefa.emoji} {ampliada.tarefa.nome}. Toque para fechar.</p>
+          <p>{ampliada.tarefa.emoji} {ampliada.tarefa.nome}, enviada {dataHora(ampliada.foto.criadaEm)}. Toque para fechar.</p>
         </div>
       )}
     </div>
@@ -228,4 +229,10 @@ function NovaTarefa({ dia }) {
 function hora(ts) {
   if (!ts?.toDate) return '';
   return 'às ' + ts.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function dataHora(ts) {
+  if (!ts?.toDate) return '';
+  const d = ts.toDate();
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }

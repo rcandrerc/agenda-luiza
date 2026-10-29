@@ -7,7 +7,7 @@ export const MAX_PAIS = 2;
 export const VALOR_SEMANAL = 30;
 
 // Por quanto tempo uma foto fica guardada antes de ser apagada.
-export const HORAS_ATE_FOTO_EXPIRAR = 24;
+export const HORAS_ATE_FOTO_EXPIRAR = 18;
 
 // Tarefas que os pais podem criar com um toque na primeira vez que abrem o app.
 export const TAREFAS_INICIAIS = [
