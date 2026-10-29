@@ -25,7 +25,6 @@ export default function TelaPais() {
 
   const feitas = tarefas.filter((t) => conclusoes[t.id]).length;
   const mesada = calcularMesada(todas, semana, dia);
-  const comFoto = tarefas.filter((t) => fotos[conclusoes[t.id]?.fotoId]);
 
   return (
     <div className="tela">
@@ -40,6 +39,7 @@ export default function TelaPais() {
 
         <section className="grupo">
           <h2>Tarefas de hoje</h2>
+          <p className="dica">As fotos somem sozinhas {HORAS_ATE_FOTO_EXPIRAR} horas depois de enviadas.</p>
           {tarefas.length > 1 && <p className="dica">Segure uma tarefa e arraste para mudar a ordem.</p>}
           {tarefas.length === 0 ? (
             <div className="vazio">
@@ -48,26 +48,9 @@ export default function TelaPais() {
             </div>
           ) : (
             <div className="lista">
-              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
+              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} foto={fotos[conclusoes[t.id]?.fotoId]} aoAmpliar={setAmpliada} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
             </div>
           )}
-        </section>
-
-        <section className="grupo">
-          <h2>Fotos de hoje</h2>
-          <p className="dica">As fotos somem sozinhas {HORAS_ATE_FOTO_EXPIRAR} horas depois de enviadas.</p>
-          <div className="fotos">
-            {comFoto.length === 0 && <div className="foto vazia">Nenhuma foto ainda</div>}
-            {comFoto.map((t) => {
-              const f = fotos[conclusoes[t.id].fotoId];
-              return (
-                <button key={t.id} className="foto" onClick={() => setAmpliada({ tarefa: t, foto: f })}>
-                  <img src={f.imagem} alt={`Foto de ${t.nome}`} />
-                  <span className="foto-data">{dataHora(f.criadaEm)}</span>
-                </button>
-              );
-            })}
-          </div>
         </section>
 
         {todas.some((t) => !apareceNoDia(t, dia)) && (
@@ -93,7 +76,7 @@ export default function TelaPais() {
   );
 }
 
-function ItemTarefa({ t, c, deHoje, arrasto }) {
+function ItemTarefa({ t, c, foto, aoAmpliar, deHoje, arrasto }) {
   const [editando, setEditando] = useState(false);
   return (
     <>
@@ -109,6 +92,14 @@ function ItemTarefa({ t, c, deHoje, arrasto }) {
         {deHoje && <span className={`selo ${c ? 'ok' : ''}`}>{c ? `Feita ${hora(c.feitaEm)}` : 'Pendente'}</span>}
         <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
       </div>
+      {foto && (
+        <div className="fotos foto-da-tarefa">
+          <button className="foto" onClick={() => aoAmpliar({ tarefa: t, foto })}>
+            <img src={foto.imagem} alt={`Foto de ${t.nome}`} />
+            <span className="foto-data">{dataHora(foto.criadaEm)}</span>
+          </button>
+        </div>
+      )}
       {editando && <EditorTarefa t={t} aoSalvar={() => setEditando(false)} />}
     </>
   );
