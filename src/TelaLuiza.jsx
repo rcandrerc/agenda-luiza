@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import Topo from './Topo';
 import {
-  calcularMesada, descreverQuando, desmarcar, dinheiro, enviarFoto, hoje, useConclusoes, useConclusoesSemana, useFotos, urgenciaPrazo, useTarefas, useTarefasDoDia,
+  calcularMesada, cancelarJustificativa, descreverQuando, desmarcar, dinheiro, enviarFoto, enviarJustificativa, hoje, useConclusoes, useConclusoesSemana,
+  useFotos, useJustificativas, useJustificativasSemana, urgenciaPrazo, useTarefas, useTarefasDoDia,
 } from './dados';
 import Mesada from './Mesada';
 
@@ -17,12 +18,15 @@ export default function TelaLuiza({ membro }) {
   const semana = useConclusoesSemana(dia);
   const conclusoes = useConclusoes(dia);
   const fotos = useFotos(dia);
+  const justificativas = useJustificativas(dia);
+  const justSemana = useJustificativasSemana(dia);
 
-  if (!tarefas || !todas || !semana || !conclusoes || !fotos) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
+  if (!tarefas || !todas || !semana || !conclusoes || !fotos || !justificativas || !justSemana) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
 
-  const feitas = tarefas.filter((t) => conclusoes[t.id]).length;
+  const justificada = (t) => justificativas[t.id]?.status === 'aprovada';
+  const feitas = tarefas.filter((t) => conclusoes[t.id] || justificada(t)).length;
   const faltam = tarefas.length - feitas;
-  const mesada = calcularMesada(todas, semana, dia);
+  const mesada = calcularMesada(todas, semana, dia, justSemana);
 
   return (
     <div className="tela">
@@ -39,7 +43,7 @@ export default function TelaLuiza({ membro }) {
               <div className="lista">
                 {itens.map((t) => (
                   <Tarefa key={t.id} tarefa={t} dia={dia} conclusao={conclusoes[t.id]} valor={t.vale ? mesada.porCaixinha : 0}
-                    foto={fotos[conclusoes[t.id]?.fotoId]} />
+                    foto={fotos[conclusoes[t.id]?.fotoId]} justificativa={justificativas[t.id]} />
                 ))}
               </div>
             </section>
@@ -55,14 +59,18 @@ export default function TelaLuiza({ membro }) {
   );
 }
 
-function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
+function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
   const [enviando, setEnviando] = useState(false);
   const [pedirFoto, setPedirFoto] = useState(false);
   const entrada = useRef(null);
-  const feita = Boolean(conclusao);
+  const [justificando, setJustificando] = useState(false);
+  const [motivo, setMotivo] = useState('');
+  const aprovada = justificativa?.status === 'aprovada';
+  const feita = Boolean(conclusao) || aprovada;
 
   // Só dá para marcar como feita mandando a foto da tarefa.
   async function alternar() {
+    if (aprovada) return;
     if (feita) await desmarcar(tarefa.id, dia, conclusao);
     else setPedirFoto(true);
   }
@@ -80,6 +88,13 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
     }
   }
 
+  async function enviarMotivo(e) {
+    e.preventDefault();
+    if (!motivo.trim()) return;
+    await enviarJustificativa(tarefa.id, dia, motivo.trim());
+    setJustificando(false);
+  }
+
   return (
     <div className={`tarefa ${feita ? 'feita' : ''}`}>
       <button className="check" onClick={alternar} aria-label={`${feita ? 'Desmarcar' : 'Marcar'} ${tarefa.nome}`}>
@@ -92,12 +107,37 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor }) {
           {tarefa.detalhe && <div className="detalhe">{tarefa.detalhe}</div>}
           {tarefa.prazo && <div className={`prazo ${feita ? 'ok' : urgenciaPrazo(tarefa)}`}>{feita ? '✓ Entregue' : descreverQuando(tarefa)}</div>}
           {valor > 0 && <div className={`ganho ${feita ? 'ok' : ''}`}>{feita ? '✓ ' : ''}+{dinheiro(valor)}</div>}
+          {!feita && !conclusao && (
+            justificativa ? (
+              <div className={`justificativa ${justificativa.status}`}>
+                {justificativa.status === 'pendente' && '⏳ Motivo enviado. Esperando os pais.'}
+                {justificativa.status === 'recusada' && '❌ Os pais não aceitaram o motivo.'}
+                {' '}
+                <button className="link" onClick={() => { setMotivo(justificativa.motivo); setJustificando(true); }}>Mudar motivo</button>
+                {justificativa.status === 'pendente' && <button className="link" onClick={() => cancelarJustificativa(tarefa.id, dia)}>Cancelar</button>}
+              </div>
+            ) : (
+              <button className="link" onClick={() => setJustificando(true)}>Não consegui fazer</button>
+            )
+          )}
+          {aprovada && <div className="justificativa aprovada">✅ Motivo aceito pelos pais</div>}
         </div>
       </div>
       <label className={`camera ${foto ? 'tem' : ''}`} title="Tirar foto">
         {enviando ? <span className="girando" /> : foto ? <img src={foto.imagem} alt={`Foto de ${tarefa.nome}`} /> : <IconeCamera />}
         <input ref={entrada} type="file" accept="image/*" capture="environment" onChange={aoEscolherFoto} aria-label={`Foto de ${tarefa.nome}`} />
       </label>
+      {justificando && (
+        <div className="ampliada" onClick={() => setJustificando(false)} role="dialog" aria-label="Por que não fez a tarefa">
+          <form className="passos pedir-foto" onClick={(e) => e.stopPropagation()} onSubmit={enviarMotivo}>
+            <h2>Por que não deu para fazer?</h2>
+            <p>Conte o motivo de “{tarefa.nome}”. Seus pais vão ver e decidir.</p>
+            <textarea className="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} rows={4} required autoFocus />
+            <button className="botao">Enviar para os pais</button>
+            <button type="button" className="link" onClick={() => setJustificando(false)}>Voltar</button>
+          </form>
+        </div>
+      )}
       {pedirFoto && (
         <div className="ampliada" onClick={() => setPedirFoto(false)} role="dialog" aria-label="Tire uma foto da tarefa">
           <div className="passos pedir-foto" onClick={(e) => e.stopPropagation()}>

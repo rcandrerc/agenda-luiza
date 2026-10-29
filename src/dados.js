@@ -10,6 +10,7 @@ import { HORAS_ATE_FOTO_EXPIRAR, MAX_PAIS, TAREFAS_INICIAIS, VALOR_SEMANAL } fro
 //   config/familia       { filha: {uid, nome} ou {}, pais: {uid: nome} }
 //   tarefas/{id}         { nome, emoji, categoria, detalhe, diaria, dias, data, prazo, inicio, vale, ordem, ativa, criadaEm }
 //   conclusoes/{dia_id}  { tarefaId, dia, feitaEm, fotoId }
+//   justificativas/{dia_id} { tarefaId, dia, motivo, status: pendente|aprovada|recusada, criadaEm, decididaEm, decididaPor }
 //   fotos/{id}           { imagem (data URL), tarefaId, dia, criadaEm, expiraEm }
 
 export function formatarDia(d) {
@@ -188,14 +189,54 @@ export function useConclusoesSemana(dia) {
 
 // A mesada da semana é dividida igualmente entre todas as caixinhas das
 // tarefas que valem dinheiro (cada tarefa conta uma vez por dia em que aparece).
-export function calcularMesada(tarefas, conclusoesSemana, dia) {
+// Justificativa aprovada pelos pais vale como tarefa feita (uma vez por dia e tarefa).
+export function calcularMesada(tarefas, conclusoesSemana, dia, justificativasSemana = []) {
   const dias = diasDaSemana(dia);
   const pagas = tarefas.filter((t) => t.vale && !t.prazo);
   const total = pagas.reduce((n, t) => n + dias.filter((d) => apareceNoDia(t, d)).length, 0);
   const ids = new Set(pagas.map((t) => t.id));
-  const feitas = Math.min(total, conclusoesSemana.filter((c) => ids.has(c.tarefaId)).length);
+  const contadas = new Set(conclusoesSemana.filter((c) => ids.has(c.tarefaId)).map((c) => `${c.dia}_${c.tarefaId}`));
+  justificativasSemana.forEach((j) => {
+    if (j.status === 'aprovada' && ids.has(j.tarefaId)) contadas.add(`${j.dia}_${j.tarefaId}`);
+  });
+  const feitas = Math.min(total, contadas.size);
   const porCaixinha = total ? VALOR_SEMANAL / total : 0;
   return { total, feitas, porCaixinha, ganho: feitas * porCaixinha, maximo: VALOR_SEMANAL };
+}
+
+export function useJustificativas(dia) {
+  const lista = useColecao(() => query(collection(db, 'justificativas'), where('dia', '==', dia)), [dia]);
+  if (!lista) return null;
+  return Object.fromEntries(lista.map((j) => [j.tarefaId, j]));
+}
+
+export function useJustificativasSemana(dia) {
+  const dias = diasDaSemana(dia);
+  return useColecao(
+    () => query(collection(db, 'justificativas'), where('dia', '>=', dias[0]), where('dia', '<=', dias[6])),
+    [dias[0]],
+  );
+}
+
+// Justificativas esperando a resposta dos pais.
+export function useJustificativasPendentes() {
+  return useColecao(() => query(collection(db, 'justificativas'), where('status', '==', 'pendente')), []);
+}
+
+export async function enviarJustificativa(tarefaId, dia, motivo) {
+  await setDoc(doc(db, 'justificativas', `${dia}_${tarefaId}`), {
+    tarefaId, dia, motivo, status: 'pendente', criadaEm: serverTimestamp(),
+  });
+}
+
+export async function cancelarJustificativa(tarefaId, dia) {
+  await deleteDoc(doc(db, 'justificativas', `${dia}_${tarefaId}`));
+}
+
+export async function decidirJustificativa(j, aprovada, uid) {
+  await updateDoc(doc(db, 'justificativas', j.id), {
+    status: aprovada ? 'aprovada' : 'recusada', decididaEm: serverTimestamp(), decididaPor: uid,
+  });
 }
 
 export function useFotos(dia) {

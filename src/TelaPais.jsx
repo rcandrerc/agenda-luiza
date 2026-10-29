@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import Topo from './Topo';
 import {
-  apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, descreverQuando, emojiSugerido, hoje,
-  removerTarefa, reordenarTarefas, urgenciaPrazo, useConclusoes, useConclusoesSemana, useFotos, useTarefas,
+  apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, decidirJustificativa, descreverQuando, emojiSugerido, hoje,
+  removerTarefa, reordenarTarefas, urgenciaPrazo, useConclusoes, useConclusoesSemana, useFotos, useJustificativas, useJustificativasPendentes, useJustificativasSemana, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
 import Mesada from './Mesada';
@@ -11,20 +11,23 @@ import { useReordenar } from './Reordenar';
 const NOMES_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const EMOJIS = ['⭐', '🛏️', '🧺', '🐱', '🍎', '🎒', '🪥', '🛁', '🧸', '📚', '✏️', '🌱', '🍽️', '🧹', '🗑️', '🐶'];
 
-export default function TelaPais() {
+export default function TelaPais({ membro }) {
   const dia = hoje();
   const todas = useTarefas();
   const conclusoes = useConclusoes(dia);
   const fotos = useFotos(dia);
   const semana = useConclusoesSemana(dia);
+  const justSemana = useJustificativasSemana(dia);
+  const justHoje = useJustificativas(dia);
+  const pendentes = useJustificativasPendentes();
   const [ampliada, setAmpliada] = useState(null);
   const reordenar = useReordenar((todas ?? []).filter((t) => apareceNoDia(t, dia)).map((t) => t.id), (nova) => reordenarTarefas(nova, todas));
 
   const tarefas = todas && todas.filter((t) => apareceNoDia(t, dia));
-  if (!tarefas || !semana || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
+  if (!tarefas || !semana || !justSemana || !justHoje || !pendentes || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
 
-  const feitas = tarefas.filter((t) => conclusoes[t.id]).length;
-  const mesada = calcularMesada(todas, semana, dia);
+  const feitas = tarefas.filter((t) => conclusoes[t.id] || justHoje[t.id]?.status === 'aprovada').length;
+  const mesada = calcularMesada(todas, semana, dia, justSemana);
   const comFoto = tarefas.filter((t) => fotos[conclusoes[t.id]?.fotoId]);
 
   return (
@@ -35,6 +38,26 @@ export default function TelaPais() {
           <div className="numero"><b>{feitas}</b><span>feitas</span></div>
           <div className="numero"><b>{tarefas.length - feitas}</b><span>faltando</span></div>
         </div>
+
+        {pendentes.length > 0 && (
+          <section className="grupo avisos" aria-label="Motivos para aprovar">
+            <h2>🔔 Motivos para aprovar ({pendentes.length})</h2>
+            {pendentes.map((j) => {
+              const t = todas.find((x) => x.id === j.tarefaId);
+              return (
+                <div key={j.id} className="cartao aviso">
+                  <div className="nome">{t?.emoji} {t?.nome ?? 'Tarefa removida'} <span className="detalhe">({j.dia.split('-').reverse().join('/')})</span></div>
+                  <p className="motivo-texto">“{j.motivo}”</p>
+                  <div className="aviso-botoes">
+                    <button className="botao" onClick={() => decidirJustificativa(j, true, membro.nome)}>Aceitar</button>
+                    <button className="botao recusar" onClick={() => decidirJustificativa(j, false, membro.nome)}>Recusar</button>
+                  </div>
+                  {t?.vale && <p className="dica">Se aceitar, conta na mesada como feita.</p>}
+                </div>
+              );
+            })}
+          </section>
+        )}
 
         <Mesada mesada={mesada} />
 
