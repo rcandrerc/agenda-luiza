@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Topo from './Topo';
 import {
   apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, decidirJustificativa, descreverQuando, emojiSugerido, hoje,
-  removerTarefa, reordenarTarefas, revisarConclusao, urgenciaPrazo, feitaDeVerdade, useConclusoes, useConfigMesada, useConclusoesSemana, useFotos, useJustificativas, useJustificativasPendentes, useJustificativasSemana, useTarefas,
+  justificarPelosPais, removerTarefa, reordenarTarefas, revisarConclusao, urgenciaPrazo, feitaDeVerdade, useConclusoes, useConfigMesada, useConclusoesSemana, useFotos, useJustificativas, useJustificativasPendentes, useJustificativasSemana, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
 import Mesada, { AjustarMesada } from './Mesada';
@@ -73,7 +73,7 @@ export default function TelaPais({ membro }) {
             </div>
           ) : (
             <div className="lista">
-              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} foto={fotos[conclusoes[t.id]?.fotoId]} aoAmpliar={setAmpliada} revisor={membro.nome} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
+              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} foto={fotos[conclusoes[t.id]?.fotoId]} aoAmpliar={setAmpliada} revisor={membro.nome} just={justHoje[t.id]} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
             </div>
           )}
         </section>
@@ -106,7 +106,7 @@ export default function TelaPais({ membro }) {
   );
 }
 
-function ItemTarefa({ t, c, foto, aoAmpliar, revisor, deHoje, arrasto }) {
+function ItemTarefa({ t, c, foto, aoAmpliar, revisor, just, deHoje, arrasto }) {
   const [editando, setEditando] = useState(false);
   return (
     <>
@@ -119,7 +119,7 @@ function ItemTarefa({ t, c, foto, aoAmpliar, revisor, deHoje, arrasto }) {
           {t.vale && <span className="etiqueta">💰 Vale dinheiro</span>}
           <button className="editar" onClick={() => setEditando(!editando)}>{editando ? 'Fechar' : 'Editar'}</button>
         </div>
-        {deHoje && <span className={`selo ${feitaDeVerdade(c) ? 'ok' : c ? 'ruim' : ''}`}>{!c ? 'Pendente' : c.revisao === 'devolvida' ? 'Refazer' : c.revisao === 'aprovada' ? 'Aprovada ✓' : `Feita ${hora(c.feitaEm)}`}</span>}
+        {deHoje && <span className={`selo ${feitaDeVerdade(c) ? 'ok' : c ? 'ruim' : ''}`}>{!c ? (just?.status === 'aprovada' ? 'Justificada' : 'Pendente') : c.revisao === 'devolvida' ? 'Refazer' : c.revisao === 'aprovada' ? 'Aprovada ✓' : `Feita ${hora(c.feitaEm)}`}</span>}
         <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
       </div>
       {foto && (
@@ -128,6 +128,11 @@ function ItemTarefa({ t, c, foto, aoAmpliar, revisor, deHoje, arrasto }) {
             <img src={foto.imagem} alt={`Foto de ${t.nome}`} />
             <span className="foto-data">{dataHora(foto.criadaEm)}</span>
           </button>
+        </div>
+      )}
+      {deHoje && !c && !(just?.status === 'aprovada') && (
+        <div className="revisao">
+          <button className="botao pequeno recusar" onClick={() => justificarPelosPais(t.id, hoje())}>✎ Justificar (não desconta, perde o bônus)</button>
         </div>
       )}
       {deHoje && c && <BotoesRevisao c={c} tarefaId={t.id} revisor={revisor} />}

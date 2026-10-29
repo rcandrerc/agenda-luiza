@@ -232,6 +232,7 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .mdia { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px 0; border-radius: 12px; background: rgba(0,0,0,.08); font-size: 12px; font-weight: 800; }
 .mdia i { font-style: normal; height: 18px; line-height: 18px; font-size: 14px; }
 .mdia.ok { background: var(--feito); color: #fff; }
+.mdia.justificada { background: var(--superficie); color: var(--destaque-tinta); }
 .mdia.falhou { background: var(--erro); color: #fff; }
 .mdia.hoje { outline: 2px solid var(--destaque-tinta); }
 .mdia.livre, .mdia.futuro { opacity: .6; }

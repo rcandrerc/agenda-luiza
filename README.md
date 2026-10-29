@@ -4,7 +4,7 @@ App de tarefas do dia da Luiza. Ela, o papai e a mamãe usam o mesmo app, cada u
 
 - **Celular da Luiza:** lista do dia separada em Casa e Escola, cada tarefa com um emoji. Ela marca a caixinha quando termina e pode tirar uma foto.
 - **Celular dos pais:** quantas tarefas ela já fez, as fotos que mandou e um campo para criar tarefas novas (todo dia ou só hoje).
-- **Mesada da semana:** R$ 30 divididos entre as caixinhas das tarefas que valem dinheiro. O valor sobe na tela a cada tarefa feita. Se ela fizer todas as caixinhas da semana, sem nenhum dia faltando, ganha mais R$ 10 de bônus. Faltou um dia, o bônus fica para a próxima semana. Os pais mudam os dois valores em *Ajustar valores da mesada*.
+- **Mesada da semana:** R$ 30 divididos entre as caixinhas das tarefas que valem dinheiro. O valor sobe na tela a cada tarefa feita. Se ela fizer todas as caixinhas da semana, sem nenhum dia faltando, ganha mais R$ 10 de bônus. Cada tarefa não feita tira só a sua fatia dos R$ 30. Os pais podem *justificar* uma tarefa (ou aceitar o motivo que ela mandou): a justificada não desconta, mas o bônus se perde, porque ele só vale com tudo feito de verdade. Os pais mudam os dois valores em *Ajustar valores da mesada*.
 - **Aprovação pela foto:** os pais veem a foto de cada tarefa e podem aprovar ou mandar refazer. Tarefa devolvida deixa de contar na mesada até ela tirar outra foto.
 - **Confete** quando ela termina o dia, e mais confete quando fecha a semana perfeita.
 - **Fotos que somem sozinhas:** cada foto é reduzida no celular antes de enviar (uns 200 a 300 KB) e é apagada 18 horas depois. Dá pra mudar o prazo em `src/familia.js`.

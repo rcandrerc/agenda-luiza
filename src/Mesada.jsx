@@ -3,13 +3,13 @@ import { dinheiro, salvarConfigMesada } from './dados';
 
 const LETRAS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 const NOMES = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-const SITUACAO = { ok: 'tudo feito', falhou: 'faltou tarefa', hoje: 'em andamento', futuro: 'ainda vem', livre: 'sem tarefas que valem' };
-const ICONE = { ok: '✓', falhou: '✕', hoje: '•', futuro: '', livre: '–' };
+const SITUACAO = { ok: 'tudo feito', justificada: 'tarefa justificada', falhou: 'faltou tarefa', hoje: 'em andamento', futuro: 'ainda vem', livre: 'sem tarefas que valem' };
+const ICONE = { ok: '✓', justificada: '✎', falhou: '✕', hoje: '•', futuro: '', livre: '–' };
 
 // Quanto já foi ganho na semana, para a Luiza e para os pais.
 export default function Mesada({ mesada }) {
   if (!mesada.total) return null;
-  const pct = Math.round((mesada.feitas / mesada.total) * 100);
+  const pct = Math.round(((mesada.feitas + mesada.justificadas) / mesada.total) * 100);
   const temBonus = mesada.bonus > 0;
   return (
     <section className="mesada" aria-label="Mesada da semana">
@@ -28,6 +28,7 @@ export default function Mesada({ mesada }) {
       </div>
       <p className="mesada-nota">
         {mesada.feitas} de {mesada.total} caixinhas. Cada uma vale {dinheiro(mesada.porCaixinha)}.
+        {mesada.justificadas > 0 && <> ✎ {mesada.justificadas} justificada{mesada.justificadas > 1 ? 's' : ''} (não desconta).</>}
         {mesada.seguidos >= 2 && <> 🔥 {mesada.seguidos} dias seguidos.</>}
       </p>
       {temBonus && (
@@ -36,7 +37,7 @@ export default function Mesada({ mesada }) {
             ? `🎉 Semana perfeita! Bônus de ${dinheiro(mesada.bonus)} garantido.`
             : mesada.bonusVivo
               ? `🎯 Nenhuma falha até agora. Fechando a semana perfeita, ganha mais ${dinheiro(mesada.bonus)}.`
-              : `Faltou tarefa em algum dia, então o bônus fica para a próxima semana. Ainda dá para ganhar até ${dinheiro(mesada.base)}.`}
+              : `Teve dia com tarefa faltando ou justificada, então o bônus fica para a próxima semana (ele só vale com tudo feito). Ainda dá para ganhar até ${dinheiro(mesada.base)}.`}
         </p>
       )}
     </section>

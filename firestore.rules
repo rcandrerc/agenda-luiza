@@ -85,6 +85,10 @@ service cloud.firestore {
         && request.resource.data.motivo is string
         && request.resource.data.motivo.size() > 0
         && request.resource.data.motivo.size() <= 500;
+      // Os pais também podem justificar direto uma tarefa que não foi feita.
+      allow create: if pais()
+        && request.resource.data.status == 'aprovada'
+        && request.resource.data.motivo is string;
       // Ela só pode reenviar (ou cancelar) enquanto os pais não aprovaram.
       allow update: if (filha() && resource.data.status != 'aprovada'
           && request.resource.data.status == 'pendente'

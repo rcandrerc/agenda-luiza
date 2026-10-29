@@ -211,28 +211,30 @@ export async function salvarConfigMesada({ base, bonus }) {
 // tarefas que valem dinheiro (cada tarefa conta uma vez por dia em que aparece).
 // Justificativa aprovada pelos pais vale como tarefa feita; tarefa devolvida
 // pelos pais não conta. Se todas as caixinhas da semana forem feitas, sem nenhum
-// dia faltando, ela ganha também o bônus.
+// dia faltando, ela ganha também o bônus. Tarefa justificada (aceita pelos pais)
+// não desconta da mesada, mas tira o bônus: ele só vale com tudo feito de verdade.
 export function calcularMesada(tarefas, conclusoesSemana, dia, justificativasSemana = [], config = { base: VALOR_SEMANAL, bonus: BONUS_SEMANAL }) {
   const dias = diasDaSemana(dia);
   const pagas = tarefas.filter((t) => t.vale && !t.prazo);
   const feitasNoDia = new Set(conclusoesSemana.filter(feitaDeVerdade).map((c) => `${c.dia}_${c.tarefaId}`));
-  justificativasSemana.forEach((j) => {
-    if (j.status === 'aprovada') feitasNoDia.add(`${j.dia}_${j.tarefaId}`);
-  });
+  const justificadasNoDia = new Set(justificativasSemana.filter((j) => j.status === 'aprovada').map((j) => `${j.dia}_${j.tarefaId}`));
 
   const porDia = dias.map((d) => {
     const doDia = pagas.filter((t) => tarefaDoDia(t, d));
     const feitas = doDia.filter((t) => feitasNoDia.has(`${d}_${t.id}`)).length;
+    const justificadas = doDia.filter((t) => !feitasNoDia.has(`${d}_${t.id}`) && justificadasNoDia.has(`${d}_${t.id}`)).length;
     const total = doDia.length;
-    const estado = total === 0 ? 'livre' : d > dia ? 'futuro' : feitas === total ? 'ok' : d === dia ? 'hoje' : 'falhou';
-    return { dia: d, total, feitas, estado };
+    const estado = total === 0 ? 'livre' : d > dia ? 'futuro' : feitas === total ? 'ok'
+      : feitas + justificadas === total ? 'justificada' : d === dia ? 'hoje' : 'falhou';
+    return { dia: d, total, feitas, justificadas, estado };
   });
 
   const total = porDia.reduce((n, d) => n + d.total, 0);
   const feitas = porDia.reduce((n, d) => n + d.feitas, 0);
-  const bonusVivo = !porDia.some((d) => d.estado === 'falhou');
+  const justificadas = porDia.reduce((n, d) => n + d.justificadas, 0);
+  const bonusVivo = !porDia.some((d) => d.estado === 'falhou' || d.estado === 'justificada');
   const bonusGanho = total > 0 && feitas === total;
-  const ganho = total ? (config.base * feitas) / total : 0;
+  const ganho = total ? (config.base * (feitas + justificadas)) / total : 0;
   const bonusValor = bonusGanho ? config.bonus : 0;
 
   // Dias seguidos sem falha, contando de hoje (ou de ontem, se hoje ainda não acabou) para trás.
@@ -245,11 +247,19 @@ export function calcularMesada(tarefas, conclusoesSemana, dia, justificativasSem
   }
 
   return {
-    total, feitas, porCaixinha: total ? config.base / total : 0,
+    total, feitas, justificadas, porCaixinha: total ? config.base / total : 0,
     base: config.base, bonus: config.bonus, bonusGanho, bonusVivo, bonusValor,
     ganho, totalGanho: ganho + bonusValor, maximo: config.base + (bonusVivo ? config.bonus : 0),
     porDia, seguidos,
   };
+}
+
+// Os pais justificam uma tarefa que não foi feita, sem esperar a Luiza explicar.
+export async function justificarPelosPais(tarefaId, dia) {
+  await setDoc(doc(db, 'justificativas', `${dia}_${tarefaId}`), {
+    tarefaId, dia, motivo: 'Justificada pelos pais', status: 'aprovada',
+    criadaEm: serverTimestamp(), decididaEm: serverTimestamp(),
+  });
 }
 
 // Os pais aprovam a tarefa olhando a foto, ou mandam a Luiza refazer.
