@@ -213,3 +213,14 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .pedir-foto { text-align: center; align-items: stretch; }
 .pedir-foto p { margin: 0; color: var(--suave); }
 .pedir-foto-icone { font-size: 48px; }
+
+.justificativa { font-size: 13px; font-weight: 700; color: var(--suave); }
+.justificativa.aprovada { color: var(--feito); }
+.justificativa .link { padding: 2px 6px; font-size: 13px; }
+.tarefa-texto .link { padding: 2px 0; font-size: 13px; text-align: left; }
+.motivo { width: 100%; box-sizing: border-box; border-radius: 14px; border: 1.5px solid var(--linha); padding: 10px; font: inherit; resize: vertical; }
+.aviso { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.motivo-texto { margin: 0; font-style: italic; }
+.aviso-botoes { display: flex; gap: 8px; }
+.aviso-botoes .botao { flex: 1; margin: 0; }
+.botao.recusar { background: var(--superficie-2); color: var(--tinta, inherit); border: 1px solid var(--linha); }
