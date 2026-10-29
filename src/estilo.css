@@ -90,8 +90,10 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .remover { border: 0; background: transparent; color: var(--suave); font-size: 22px; line-height: 1; padding: 4px 6px; border-radius: 8px; }
 
 .fotos { display: flex; flex-wrap: wrap; gap: 8px; }
-.foto { width: 88px; height: 88px; padding: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--linha); background: var(--superficie-2); }
+.foto { width: 104px; height: 104px; padding: 0; border-radius: 14px; overflow: hidden; position: relative; border: 1px solid var(--linha); background: var(--superficie-2); }
 .foto img { width: 100%; height: 100%; object-fit: cover; }
+.foto-data { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 10px; line-height: 1.2; padding: 3px 2px; text-align: center; }
+.foto-da-tarefa { margin: -6px 0 0 12px; }
 .foto.vazia { display: grid; place-items: center; font-size: 12px; color: var(--suave); text-align: center; padding: 6px; }
 .ampliada { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; color: #fff; z-index: 10; }
 .ampliada img { max-width: 100%; max-height: 80vh; border-radius: 16px; }
