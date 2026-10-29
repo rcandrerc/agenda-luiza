@@ -224,3 +224,21 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .aviso-botoes { display: flex; gap: 8px; }
 .aviso-botoes .botao { flex: 1; margin: 0; }
 .botao.recusar { background: var(--superficie-2); color: var(--tinta, inherit); border: 1px solid var(--linha); }
+
+/* Mesada: valor que sobe, dias da semana e bônus */
+.mesada-valor { display: inline-block; animation: subir .5s ease; }
+@keyframes subir { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.mesada-dias { display: flex; gap: 6px; }
+.mdia { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px 0; border-radius: 12px; background: rgba(0,0,0,.08); font-size: 12px; font-weight: 800; }
+.mdia i { font-style: normal; height: 18px; line-height: 18px; font-size: 14px; }
+.mdia.ok { background: var(--feito); color: #fff; }
+.mdia.falhou { background: var(--erro); color: #fff; }
+.mdia.hoje { outline: 2px solid var(--destaque-tinta); }
+.mdia.livre, .mdia.futuro { opacity: .6; }
+.mesada-bonus { margin: 0; font-size: 13px; font-weight: 800; }
+.mesada-bonus.conquistado { font-size: 15px; }
+.mesada .barra { flex: none; }
+.ajustar { align-self: flex-start; }
+.selo.ruim { background: var(--casa-suave); color: var(--erro); }
+.revisao { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
+.botao.pequeno { margin: 0; padding: 8px 12px; font-size: 14px; }

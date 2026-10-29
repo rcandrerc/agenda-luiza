@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Topo from './Topo';
 import {
-  calcularMesada, cancelarJustificativa, descreverQuando, desmarcar, dinheiro, enviarFoto, enviarJustificativa, hoje, useConclusoes, useConclusoesSemana,
+  calcularMesada, cancelarJustificativa, descreverQuando, desmarcar, dinheiro, enviarFoto, enviarJustificativa, feitaDeVerdade, hoje, useConclusoes, useConclusoesSemana, useConfigMesada,
   useFotos, useJustificativas, useJustificativasSemana, urgenciaPrazo, useTarefas, useTarefasDoDia,
 } from './dados';
 import Mesada from './Mesada';
+import { confete } from './confete';
 
 const GRUPOS = [
   { id: 'casa', nome: 'Casa' },
@@ -20,13 +21,30 @@ export default function TelaLuiza({ membro }) {
   const fotos = useFotos(dia);
   const justificativas = useJustificativas(dia);
   const justSemana = useJustificativasSemana(dia);
+  const config = useConfigMesada();
 
-  if (!tarefas || !todas || !semana || !conclusoes || !fotos || !justificativas || !justSemana) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
-
+  const pronto = Boolean(tarefas && todas && semana && conclusoes && fotos && justificativas && justSemana);
   const justificada = (t) => justificativas[t.id]?.status === 'aprovada';
-  const feitas = tarefas.filter((t) => conclusoes[t.id] || justificada(t)).length;
+  const feitas = pronto ? tarefas.filter((t) => feitaDeVerdade(conclusoes[t.id]) || justificada(t)).length : 0;
+  const total = tarefas?.length ?? 0;
+  const mesada = pronto ? calcularMesada(todas, semana, dia, justSemana, config) : null;
+
+  // Confete quando ela termina o dia, e mais confete quando fecha a semana perfeita.
+  // A primeira leitura só guarda o ponto de partida, para não soltar confete ao abrir o app.
+  const antes = useRef(null);
+  useEffect(() => {
+    if (!pronto) return;
+    const bonus = mesada.bonusGanho;
+    if (antes.current) {
+      if (bonus && !antes.current.bonus) confete(280);
+      else if (total > 0 && feitas === total && feitas > antes.current.feitas) confete();
+    }
+    antes.current = { feitas, bonus };
+  }, [pronto, feitas, total, mesada?.bonusGanho]);
+
+  if (!pronto) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
+
   const faltam = tarefas.length - feitas;
-  const mesada = calcularMesada(todas, semana, dia, justSemana);
 
   return (
     <div className="tela">
@@ -66,7 +84,8 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
   const [justificando, setJustificando] = useState(false);
   const [motivo, setMotivo] = useState('');
   const aprovada = justificativa?.status === 'aprovada';
-  const feita = Boolean(conclusao) || aprovada;
+  const devolvida = conclusao?.revisao === 'devolvida' && !aprovada;
+  const feita = feitaDeVerdade(conclusao) || aprovada;
 
   // Só dá para marcar como feita mandando a foto da tarefa.
   async function alternar() {
@@ -106,6 +125,7 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
           <div className="nome">{tarefa.nome}</div>
           {tarefa.detalhe && <div className="detalhe">{tarefa.detalhe}</div>}
           {tarefa.prazo && <div className={`prazo ${feita ? 'ok' : urgenciaPrazo(tarefa)}`}>{feita ? '✓ Entregue' : descreverQuando(tarefa)}</div>}
+          {devolvida && <div className="justificativa recusada">↩️ Os pais pediram para refazer. Tire outra foto!</div>}
           {valor > 0 && <div className={`ganho ${feita ? 'ok' : ''}`}>{feita ? '✓ ' : ''}+{dinheiro(valor)}</div>}
           {!feita && !conclusao && (
             justificativa ? (

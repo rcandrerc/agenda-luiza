@@ -4,6 +4,9 @@ App de tarefas do dia da Luiza. Ela, o papai e a mamãe usam o mesmo app, cada u
 
 - **Celular da Luiza:** lista do dia separada em Casa e Escola, cada tarefa com um emoji. Ela marca a caixinha quando termina e pode tirar uma foto.
 - **Celular dos pais:** quantas tarefas ela já fez, as fotos que mandou e um campo para criar tarefas novas (todo dia ou só hoje).
+- **Mesada da semana:** R$ 30 divididos entre as caixinhas das tarefas que valem dinheiro. O valor sobe na tela a cada tarefa feita. Se ela fizer todas as caixinhas da semana, sem nenhum dia faltando, ganha mais R$ 10 de bônus. Faltou um dia, o bônus fica para a próxima semana. Os pais mudam os dois valores em *Ajustar valores da mesada*.
+- **Aprovação pela foto:** os pais veem a foto de cada tarefa e podem aprovar ou mandar refazer. Tarefa devolvida deixa de contar na mesada até ela tirar outra foto.
+- **Confete** quando ela termina o dia, e mais confete quando fecha a semana perfeita.
 - **Fotos que somem sozinhas:** cada foto é reduzida no celular antes de enviar (uns 200 a 300 KB) e é apagada 18 horas depois. Dá pra mudar o prazo em `src/familia.js`.
 
 Feito com React + Vite e Firebase (login com a conta Google e banco Firestore). Funciona no plano grátis (Spark): as fotos ficam no próprio Firestore, sem precisar do Storage.

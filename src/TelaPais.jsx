@@ -2,10 +2,10 @@ import { useState } from 'react';
 import Topo from './Topo';
 import {
   apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, decidirJustificativa, descreverQuando, emojiSugerido, hoje,
-  removerTarefa, reordenarTarefas, urgenciaPrazo, useConclusoes, useConclusoesSemana, useFotos, useJustificativas, useJustificativasPendentes, useJustificativasSemana, useTarefas,
+  removerTarefa, reordenarTarefas, revisarConclusao, urgenciaPrazo, feitaDeVerdade, useConclusoes, useConfigMesada, useConclusoesSemana, useFotos, useJustificativas, useJustificativasPendentes, useJustificativasSemana, useTarefas,
 } from './dados';
 import { HORAS_ATE_FOTO_EXPIRAR } from './familia';
-import Mesada from './Mesada';
+import Mesada, { AjustarMesada } from './Mesada';
 import { useReordenar } from './Reordenar';
 
 const NOMES_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -20,14 +20,15 @@ export default function TelaPais({ membro }) {
   const justSemana = useJustificativasSemana(dia);
   const justHoje = useJustificativas(dia);
   const pendentes = useJustificativasPendentes();
+  const config = useConfigMesada();
   const [ampliada, setAmpliada] = useState(null);
   const reordenar = useReordenar((todas ?? []).filter((t) => apareceNoDia(t, dia)).map((t) => t.id), (nova) => reordenarTarefas(nova, todas));
 
   const tarefas = todas && todas.filter((t) => apareceNoDia(t, dia));
   if (!tarefas || !semana || !justSemana || !justHoje || !pendentes || !conclusoes || !fotos) return <div className="tela"><Topo titulo="Dia da Luiza" feitas={0} total={0} /></div>;
 
-  const feitas = tarefas.filter((t) => conclusoes[t.id] || justHoje[t.id]?.status === 'aprovada').length;
-  const mesada = calcularMesada(todas, semana, dia, justSemana);
+  const feitas = tarefas.filter((t) => feitaDeVerdade(conclusoes[t.id]) || justHoje[t.id]?.status === 'aprovada').length;
+  const mesada = calcularMesada(todas, semana, dia, justSemana, config);
 
   return (
     <div className="tela">
@@ -59,6 +60,7 @@ export default function TelaPais({ membro }) {
         )}
 
         <Mesada mesada={mesada} />
+        <AjustarMesada config={config} />
 
         <section className="grupo">
           <h2>Tarefas de hoje</h2>
@@ -71,7 +73,7 @@ export default function TelaPais({ membro }) {
             </div>
           ) : (
             <div className="lista">
-              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} foto={fotos[conclusoes[t.id]?.fotoId]} aoAmpliar={setAmpliada} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
+              {tarefas.map((t) => <ItemTarefa key={t.id} t={t} c={conclusoes[t.id]} foto={fotos[conclusoes[t.id]?.fotoId]} aoAmpliar={setAmpliada} revisor={membro.nome} deHoje arrasto={reordenar.propsDe(t.id, 'linha')} />)}
             </div>
           )}
         </section>
@@ -93,13 +95,18 @@ export default function TelaPais({ membro }) {
         <div className="ampliada" onClick={() => setAmpliada(null)} role="dialog" aria-label={`Foto de ${ampliada.tarefa.nome}`}>
           <img src={ampliada.foto.imagem} alt={`Foto de ${ampliada.tarefa.nome}`} />
           <p>{ampliada.tarefa.emoji} {ampliada.tarefa.nome}, enviada {dataHora(ampliada.foto.criadaEm)}. Toque para fechar.</p>
+          {ampliada.conclusao && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <BotoesRevisao c={ampliada.conclusao} tarefaId={ampliada.tarefa.id} revisor={membro.nome} aoTerminar={() => setAmpliada(null)} />
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function ItemTarefa({ t, c, foto, aoAmpliar, deHoje, arrasto }) {
+function ItemTarefa({ t, c, foto, aoAmpliar, revisor, deHoje, arrasto }) {
   const [editando, setEditando] = useState(false);
   return (
     <>
@@ -112,19 +119,34 @@ function ItemTarefa({ t, c, foto, aoAmpliar, deHoje, arrasto }) {
           {t.vale && <span className="etiqueta">💰 Vale dinheiro</span>}
           <button className="editar" onClick={() => setEditando(!editando)}>{editando ? 'Fechar' : 'Editar'}</button>
         </div>
-        {deHoje && <span className={`selo ${c ? 'ok' : ''}`}>{c ? `Feita ${hora(c.feitaEm)}` : 'Pendente'}</span>}
+        {deHoje && <span className={`selo ${feitaDeVerdade(c) ? 'ok' : c ? 'ruim' : ''}`}>{!c ? 'Pendente' : c.revisao === 'devolvida' ? 'Refazer' : c.revisao === 'aprovada' ? 'Aprovada ✓' : `Feita ${hora(c.feitaEm)}`}</span>}
         <button className="remover" onClick={() => removerTarefa(t.id)} aria-label={`Remover ${t.nome}`}>×</button>
       </div>
       {foto && (
         <div className="fotos foto-da-tarefa">
-          <button className="foto" onClick={() => aoAmpliar({ tarefa: t, foto })}>
+          <button className="foto" onClick={() => aoAmpliar({ tarefa: t, foto, conclusao: c })}>
             <img src={foto.imagem} alt={`Foto de ${t.nome}`} />
             <span className="foto-data">{dataHora(foto.criadaEm)}</span>
           </button>
         </div>
       )}
+      {deHoje && c && <BotoesRevisao c={c} tarefaId={t.id} revisor={revisor} />}
       {editando && <EditorTarefa t={t} aoSalvar={() => setEditando(false)} />}
     </>
+  );
+}
+
+// Os pais olham a foto e aprovam, ou mandam a Luiza refazer (a tarefa deixa de contar na mesada).
+function BotoesRevisao({ c, tarefaId, revisor, aoTerminar }) {
+  async function revisar(resultado) {
+    await revisarConclusao(tarefaId, c.dia, resultado, revisor);
+    aoTerminar?.();
+  }
+  return (
+    <div className="revisao">
+      {c.revisao !== 'aprovada' && <button className="botao pequeno" onClick={() => revisar('aprovada')}>👍 Aprovar</button>}
+      {c.revisao !== 'devolvida' && <button className="botao pequeno recusar" onClick={() => revisar('devolvida')}>↩️ Refazer</button>}
+    </div>
   );
 }
 

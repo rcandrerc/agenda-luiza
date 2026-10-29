@@ -6,6 +6,10 @@ export const MAX_PAIS = 2;
 // Quanto a Luiza ganha por semana se fizer todas as tarefas que valem dinheiro.
 export const VALOR_SEMANAL = 30;
 
+// Bônus se ela fizer todas as tarefas da semana sem faltar nenhum dia.
+// Os pais podem mudar os dois valores no app (config/mesada).
+export const BONUS_SEMANAL = 10;
+
 // Por quanto tempo uma foto fica guardada antes de ser apagada.
 export const HORAS_ATE_FOTO_EXPIRAR = 18;
 

@@ -62,8 +62,19 @@ service cloud.firestore {
       allow write: if pais();
     }
 
+    // A Luiza marca a tarefa; só os pais aprovam ou mandam refazer (campo revisao).
     match /conclusoes/{id} {
-      allow read, write: if familia();
+      allow read, delete: if familia();
+      allow create, update: if pais() || (filha() && !('revisao' in request.resource.data));
+    }
+
+    // Valor da mesada e do bônus semanal.
+    match /config/mesada {
+      allow read: if familia();
+      allow write: if pais()
+        && request.resource.data.keys().hasOnly(['base', 'bonus'])
+        && request.resource.data.base is number && request.resource.data.base >= 0
+        && request.resource.data.bonus is number && request.resource.data.bonus >= 0;
     }
 
     // A Luiza explica por que não fez a tarefa; os pais aprovam ou recusam.
