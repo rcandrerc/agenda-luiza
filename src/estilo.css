@@ -224,3 +224,4 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .aviso-botoes { display: flex; gap: 8px; }
 .aviso-botoes .botao { flex: 1; margin: 0; }
 .botao.recusar { background: var(--superficie-2); color: var(--tinta, inherit); border: 1px solid var(--linha); }
+.erro { margin: 0; color: #c0392b; font-weight: 700; font-size: 14px; }

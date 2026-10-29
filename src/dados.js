@@ -40,7 +40,11 @@ export function diasDaSemana(dia) {
 function useColecao(q, deps) {
   const [itens, setItens] = useState(null);
   useEffect(() => {
-    return onSnapshot(q(), (snap) => setItens(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q(),
+      (snap) => setItens(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.error('Erro ao ler o Firestore:', err.code, err.message),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return itens;
