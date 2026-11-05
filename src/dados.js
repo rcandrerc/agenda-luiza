@@ -41,7 +41,11 @@ export function diasDaSemana(dia) {
 function useColecao(q, deps) {
   const [itens, setItens] = useState(null);
   useEffect(() => {
-    return onSnapshot(q(), (snap) => setItens(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+    return onSnapshot(
+      q(),
+      (snap) => setItens(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.error('Erro ao ler o Firestore:', err.code, err.message),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
   return itens;
@@ -277,6 +281,25 @@ export function useJustificativas(dia) {
   const lista = useColecao(() => query(collection(db, 'justificativas'), where('dia', '==', dia)), [dia]);
   if (!lista) return null;
   return Object.fromEntries(lista.map((j) => [j.tarefaId, j]));
+}
+
+// Dias anteriores (do mais recente ao mais antigo) em que ainda dá para justificar.
+export const DIAS_PARA_JUSTIFICAR = 3;
+
+export function diasAnteriores(dia, n = DIAS_PARA_JUSTIFICAR) {
+  const base = new Date(`${dia}T12:00:00`);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() - (i + 1));
+    return formatarDia(d);
+  });
+}
+
+export function useJustificativasPeriodo(de, ate) {
+  return useColecao(
+    () => query(collection(db, 'justificativas'), where('dia', '>=', de), where('dia', '<=', ate)),
+    [de, ate],
+  );
 }
 
 export function useJustificativasSemana(dia) {

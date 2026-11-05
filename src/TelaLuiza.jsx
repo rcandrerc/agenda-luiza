@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Topo from './Topo';
 import AlertaAmanha from './AlertaAmanha';
 import {
-  calcularMesada, cancelarJustificativa, descreverQuando, desmarcar, dinheiro, enviarFoto, enviarJustificativa, feitaDeVerdade, hoje, useConclusoes, useConclusoesSemana, useConfigMesada,
+  calcularMesada, cancelarJustificativa, diasAnteriores, tarefaDoDia, useJustificativasPeriodo, descreverQuando, desmarcar, dinheiro, enviarFoto, enviarJustificativa, feitaDeVerdade, hoje, useConclusoes, useConclusoesPeriodo, useConclusoesSemana, useConfigMesada,
   useFotos, useJustificativas, useJustificativasSemana, urgenciaPrazo, useTarefas, useTarefasDoDia,
 } from './dados';
 import Mesada from './Mesada';
@@ -23,8 +23,11 @@ export default function TelaLuiza({ membro }) {
   const justificativas = useJustificativas(dia);
   const justSemana = useJustificativasSemana(dia);
   const config = useConfigMesada();
+  const anteriores = diasAnteriores(dia);
+  const concAnteriores = useConclusoesPeriodo(anteriores[anteriores.length - 1], anteriores[0]);
+  const justAnteriores = useJustificativasPeriodo(anteriores[anteriores.length - 1], anteriores[0]);
 
-  const pronto = Boolean(tarefas && todas && semana && conclusoes && fotos && justificativas && justSemana);
+  const pronto = Boolean(tarefas && todas && semana && conclusoes && fotos && justificativas && justSemana && concAnteriores && justAnteriores);
   const justificada = (t) => justificativas[t.id]?.status === 'aprovada';
   const feitas = pronto ? tarefas.filter((t) => feitaDeVerdade(conclusoes[t.id]) || justificada(t)).length : 0;
   const total = tarefas?.length ?? 0;
@@ -34,7 +37,14 @@ export default function TelaLuiza({ membro }) {
   // A primeira leitura só guarda o ponto de partida, para não soltar confete ao abrir o app.
   const antes = useRef(null);
   useEffect(() => {
-    if (!pronto) return;
+    const pendentesAntes = pronto ? anteriores.map((d) => ({
+    dia: d,
+    itens: (todas ?? []).filter((t) => !t.prazo && tarefaDoDia(t, d)
+      && !feitaDeVerdade(concAnteriores.find((c) => c.dia === d && c.tarefaId === t.id))
+      && justAnteriores.find((j) => j.dia === d && j.tarefaId === t.id)?.status !== 'aprovada'),
+  })).filter((g) => g.itens.length) : [];
+
+  if (!pronto) return;
     const bonus = mesada.bonusGanho;
     if (antes.current) {
       if (bonus && !antes.current.bonus) confete(280);
@@ -74,7 +84,67 @@ export default function TelaLuiza({ membro }) {
             {faltam === 0 ? 'Tudo pronto hoje! Mandou bem! 🎉' : `Faltam ${faltam} ${faltam === 1 ? 'tarefa' : 'tarefas'}. Você consegue! 💪`}
           </div>
         )}
+        {pendentesAntes.length > 0 && (
+          <section className="grupo">
+            <h2>Dias anteriores</h2>
+            <p className="dica">Não deu para fazer? Conte o motivo e seus pais decidem.</p>
+            {pendentesAntes.map((g) => (
+              <div key={g.dia} className="lista">
+                <p className="dica">{new Date(`${g.dia}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}</p>
+                {g.itens.map((t) => (
+                  <TarefaAnterior key={t.id} tarefa={t} dia={g.dia} justificativa={justAnteriores.find((j) => j.dia === g.dia && j.tarefaId === t.id)} />
+                ))}
+              </div>
+            ))}
+          </section>
+        )}
       </main>
+    </div>
+  );
+}
+
+// Tarefa de um dia que já passou: só dá para justificar (a foto é do próprio dia).
+function TarefaAnterior({ tarefa, dia, justificativa }) {
+  const [justificando, setJustificando] = useState(false);
+  const [motivo, setMotivo] = useState('');
+
+  async function enviarMotivo(e) {
+    e.preventDefault();
+    if (!motivo.trim()) return;
+    await enviarJustificativa(tarefa.id, dia, motivo.trim());
+    setJustificando(false);
+  }
+
+  return (
+    <div className="tarefa">
+      <span className="emoji" aria-hidden="true">{tarefa.emoji}</span>
+      <div className="tarefa-texto">
+        <div>
+          <div className="nome">{tarefa.nome}</div>
+          {justificativa ? (
+            <div className={`justificativa ${justificativa.status}`}>
+              {justificativa.status === 'pendente' && '⏳ Motivo enviado. Esperando os pais.'}
+              {justificativa.status === 'recusada' && '❌ Os pais não aceitaram o motivo.'}
+              {' '}
+              <button className="link" onClick={() => { setMotivo(justificativa.motivo); setJustificando(true); }}>Mudar motivo</button>
+              {justificativa.status === 'pendente' && <button className="link" onClick={() => cancelarJustificativa(tarefa.id, dia)}>Cancelar</button>}
+            </div>
+          ) : (
+            <button className="link" onClick={() => setJustificando(true)}>Não consegui fazer</button>
+          )}
+        </div>
+      </div>
+      {justificando && (
+        <div className="ampliada" onClick={() => setJustificando(false)} role="dialog" aria-label="Por que não fez a tarefa">
+          <form className="passos pedir-foto" onClick={(e) => e.stopPropagation()} onSubmit={enviarMotivo}>
+            <h2>Por que não deu para fazer?</h2>
+            <p>Conte o motivo de “{tarefa.nome}”. Seus pais vão ver e decidir.</p>
+            <textarea className="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} rows={4} required autoFocus />
+            <button className="botao">Enviar para os pais</button>
+            <button type="button" className="link" onClick={() => setJustificando(false)}>Voltar</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
@@ -85,6 +155,8 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
   const entrada = useRef(null);
   const [justificando, setJustificando] = useState(false);
   const [motivo, setMotivo] = useState('');
+  const [erro, setErro] = useState('');
+  const [enviandoMotivo, setEnviandoMotivo] = useState(false);
   const aprovada = justificativa?.status === 'aprovada';
   const devolvida = conclusao?.revisao === 'devolvida' && !aprovada;
   const feita = feitaDeVerdade(conclusao) || aprovada;
@@ -112,8 +184,16 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
   async function enviarMotivo(e) {
     e.preventDefault();
     if (!motivo.trim()) return;
-    await enviarJustificativa(tarefa.id, dia, motivo.trim());
-    setJustificando(false);
+    setErro('');
+    setEnviandoMotivo(true);
+    try {
+      await enviarJustificativa(tarefa.id, dia, motivo.trim());
+      setJustificando(false);
+    } catch (err) {
+      setErro(`Não consegui enviar (${err.code ?? err.message}). Tente de novo.`);
+    } finally {
+      setEnviandoMotivo(false);
+    }
   }
 
   return (
@@ -155,7 +235,8 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
             <h2>Por que não deu para fazer?</h2>
             <p>Conte o motivo de “{tarefa.nome}”. Seus pais vão ver e decidir.</p>
             <textarea className="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} rows={4} required autoFocus />
-            <button className="botao">Enviar para os pais</button>
+            {erro && <p className="erro" role="alert">{erro}</p>}
+            <button className="botao" disabled={enviandoMotivo}>{enviandoMotivo ? 'Enviando...' : 'Enviar para os pais'}</button>
             <button type="button" className="link" onClick={() => setJustificando(false)}>Voltar</button>
           </form>
         </div>
