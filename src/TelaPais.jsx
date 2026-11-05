@@ -216,6 +216,7 @@ function NovaTarefa({ dia }) {
   function escolherMateria(m) {
     setMateria(m);
     if (m) {
+      setTipo('prazo');
       const proxima = proximaAula(m, dia);
       if (proxima) setPrazo(proxima);
     }
@@ -223,7 +224,7 @@ function NovaTarefa({ dia }) {
 
   function mudarNome(valor) {
     setNome(valor);
-    if (tipo === 'prazo' && !materiaManual) {
+    if ((tipo === 'prazo' || categoria === 'escola') && !materiaManual) {
       const achada = materiaDoNome(valor);
       if (achada) escolherMateria(achada);
       else setMateria('');
@@ -253,7 +254,7 @@ function NovaTarefa({ dia }) {
       <form className="cartao nova" onSubmit={adicionar}>
         <input id="nova-nome" placeholder="Ex.: Escovar os dentes" value={nome} onChange={(e) => mudarNome(e.target.value)} required />
         <div className="opcoes">
-          <select id="nova-categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)} aria-label="Categoria">
+          <select id="nova-categoria" value={categoria} onChange={(e) => { setCategoria(e.target.value); if (e.target.value !== 'escola' && tipo !== 'prazo') setMateria(''); }} aria-label="Categoria">
             <option value="casa">Casa</option>
             <option value="escola">Escola</option>
           </select>
@@ -263,18 +264,20 @@ function NovaTarefa({ dia }) {
             <option value="prazo">Até uma data (prazo)</option>
           </select>
         </div>
+        {(categoria === 'escola' || tipo === 'prazo') && (
+        <label className="campo">Matéria (o prazo vira a próxima aula dela)
+              <select id="nova-materia" value={materia} onChange={(e) => { setMateriaManual(true); escolherMateria(e.target.value); }}>
+                <option value="">Nenhuma, escolho a data</option>
+                {listaMaterias.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </label>
+        )}
         {tipo === 'semana' && <SeletorDias dias={dias} setDias={setDias} />}
         {tipo === 'dia' && (
           <input id="nova-data" type="date" value={data} min={dia} onChange={(e) => setData(e.target.value)} required aria-label="Dia da tarefa" />
         )}
         {tipo === 'prazo' && (
           <>
-            <label className="campo">Matéria (o prazo vira a próxima aula dela)
-              <select id="nova-materia" value={materia} onChange={(e) => { setMateriaManual(true); escolherMateria(e.target.value); }}>
-                <option value="">Nenhuma, escolho a data</option>
-                {listaMaterias.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </label>
             <label className="campo">Entregar até
               <input id="novo-prazo" type="date" value={prazo} min={dia} onChange={(e) => setPrazo(e.target.value)} required />
             </label>
