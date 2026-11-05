@@ -155,6 +155,8 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
   const entrada = useRef(null);
   const [justificando, setJustificando] = useState(false);
   const [motivo, setMotivo] = useState('');
+  const [erro, setErro] = useState('');
+  const [enviandoMotivo, setEnviandoMotivo] = useState(false);
   const aprovada = justificativa?.status === 'aprovada';
   const devolvida = conclusao?.revisao === 'devolvida' && !aprovada;
   const feita = feitaDeVerdade(conclusao) || aprovada;
@@ -182,8 +184,16 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
   async function enviarMotivo(e) {
     e.preventDefault();
     if (!motivo.trim()) return;
-    await enviarJustificativa(tarefa.id, dia, motivo.trim());
-    setJustificando(false);
+    setErro('');
+    setEnviandoMotivo(true);
+    try {
+      await enviarJustificativa(tarefa.id, dia, motivo.trim());
+      setJustificando(false);
+    } catch (err) {
+      setErro(`Não consegui enviar (${err.code ?? err.message}). Tente de novo.`);
+    } finally {
+      setEnviandoMotivo(false);
+    }
   }
 
   return (
@@ -225,7 +235,8 @@ function Tarefa({ tarefa, dia, conclusao, foto, valor, justificativa }) {
             <h2>Por que não deu para fazer?</h2>
             <p>Conte o motivo de “{tarefa.nome}”. Seus pais vão ver e decidir.</p>
             <textarea className="motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={500} rows={4} required autoFocus />
-            <button className="botao">Enviar para os pais</button>
+            {erro && <p className="erro" role="alert">{erro}</p>}
+            <button className="botao" disabled={enviandoMotivo}>{enviandoMotivo ? 'Enviando...' : 'Enviar para os pais'}</button>
             <button type="button" className="link" onClick={() => setJustificando(false)}>Voltar</button>
           </form>
         </div>

@@ -24,6 +24,8 @@ export default function TelaPais({ membro }) {
   const pendentes = useJustificativasPendentes();
   const config = useConfigMesada();
   const [ampliada, setAmpliada] = useState(null);
+  const decidir = (j, aprovada) => decidirJustificativa(j, aprovada, membro.nome)
+    .catch((err) => window.alert(`Não consegui salvar (${err.code ?? err.message}).`));
   const reordenar = useReordenar((todas ?? []).filter((t) => apareceNoDia(t, dia)).map((t) => t.id), (nova) => reordenarTarefas(nova, todas));
 
   const tarefas = todas && todas.filter((t) => apareceNoDia(t, dia));
@@ -52,8 +54,8 @@ export default function TelaPais({ membro }) {
                   <div className="nome">{t?.emoji} {t?.nome ?? 'Tarefa removida'} <span className="detalhe">({j.dia.split('-').reverse().join('/')})</span></div>
                   <p className="motivo-texto">“{j.motivo}”</p>
                   <div className="aviso-botoes">
-                    <button className="botao" onClick={() => decidirJustificativa(j, true, membro.nome)}>Aceitar</button>
-                    <button className="botao recusar" onClick={() => decidirJustificativa(j, false, membro.nome)}>Recusar</button>
+                    <button className="botao" onClick={() => decidir(j, true)}>Aceitar</button>
+                    <button className="botao recusar" onClick={() => decidir(j, false)}>Recusar</button>
                   </div>
                   {t?.vale && <p className="dica">Se aceitar, conta na mesada como feita.</p>}
                 </div>
