@@ -181,12 +181,16 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .etiqueta.prazo-perto { background: #fff1d6; color: #8a5a00; }
 .etiqueta.prazo-hoje { background: #ffe0c7; color: #a14400; }
 .etiqueta.prazo-atrasada { background: #fde0dc; color: #b3261e; }
+.etiqueta.prazo-amanha { background: #d92d20; color: #fff; font-weight: 800; }
 .prazo { font-size: 13px; font-weight: 800; color: var(--suave); }
-.prazo.perto { color: #b97a00; } .prazo.hoje { color: #c25a00; } .prazo.atrasada { color: var(--erro); } .prazo.ok { color: var(--feito); }
+.prazo.perto { color: #b97a00; } .prazo.hoje { color: #c25a00; } .prazo.atrasada { color: var(--erro); } .prazo.amanha { color: #d92d20; font-size: 14px; } .prazo.ok { color: var(--feito); }
 @media (prefers-color-scheme: dark) {
   .etiqueta.prazo-perto { background: #4a3a14; color: #ffd27a; }
   .etiqueta.prazo-hoje { background: #4d2f17; color: #ffb27a; }
   .etiqueta.prazo-atrasada { background: #4d1f1b; color: #ff9d93; }
+  .etiqueta.prazo-amanha { background: #f04438; color: #fff; }
+  .prazo.amanha { color: #ff6b5e; }
+  .alerta-amanha { background: #4d1f1b; color: #ffd6d1; border-color: #f04438; }
   .prazo.perto { color: #ffd27a; } .prazo.hoje { color: #ffb27a; }
 }
 .campo { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
@@ -246,3 +250,7 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 
 /* Alternar visão pai/filha (só contas de teste) */
 .trocar-visao { position: fixed; top: 8px; right: 8px; z-index: 10; border: 0; border-radius: 999px; padding: 6px 12px; background: rgba(0,0,0,.65); color: #fff; font-weight: 800; font-size: 12px; }
+
+/* Alerta vermelho: dever para amanhã */
+.alerta-amanha { background: #fde0dc; color: #7a1710; border: 2px solid #d92d20; border-radius: 14px; padding: 10px 14px; margin-bottom: 12px; font-weight: 700; }
+.alerta-amanha ul { margin: 6px 0 0; padding-left: 20px; font-weight: 600; }

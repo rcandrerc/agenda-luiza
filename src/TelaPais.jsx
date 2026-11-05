@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { materias, materiaDoNome, proximaAula } from './horario';
 import Topo from './Topo';
+import AlertaAmanha from './AlertaAmanha';
 import {
   apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, decidirJustificativa, descreverQuando, emojiSugerido, hoje,
   justificarPelosPais, removerTarefa, reordenarTarefas, revisarConclusao, urgenciaPrazo, feitaDeVerdade, useConclusoes, useConfigMesada, useConclusoesSemana, useFotos, useJustificativas, useJustificativasPendentes, useJustificativasSemana, useTarefas,
@@ -35,6 +36,7 @@ export default function TelaPais({ membro }) {
     <div className="tela">
       <Topo titulo="Dia da Luiza" feitas={feitas} total={tarefas.length} />
       <main className="conteudo">
+        <AlertaAmanha tarefas={todas} />
         <div className="resumo">
           <div className="numero"><b>{feitas}</b><span>feitas</span></div>
           <div className="numero"><b>{tarefas.length - feitas}</b><span>faltando</span></div>
