@@ -243,3 +243,6 @@ input, select { font: inherit; padding: 12px; border-radius: 12px; border: 1px s
 .selo.ruim { background: var(--casa-suave); color: var(--erro); }
 .revisao { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 4px; }
 .botao.pequeno { margin: 0; padding: 8px 12px; font-size: 14px; }
+
+/* Alternar visão pai/filha (só contas de teste) */
+.trocar-visao { position: fixed; top: 8px; right: 8px; z-index: 10; border: 0; border-radius: 999px; padding: 6px 12px; background: rgba(0,0,0,.65); color: #fff; font-weight: 800; font-size: 12px; }

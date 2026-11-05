@@ -85,17 +85,18 @@ service cloud.firestore {
         && request.resource.data.motivo is string
         && request.resource.data.motivo.size() > 0
         && request.resource.data.motivo.size() <= 500;
-      // Os pais também podem justificar direto uma tarefa que não foi feita.
+      // Os pais também podem justificar direto uma tarefa que não foi feita
+      // (e criar uma pendente, para testar a visão da Luiza).
       allow create: if pais()
-        && request.resource.data.status == 'aprovada'
+        && request.resource.data.status in ['aprovada', 'pendente']
         && request.resource.data.motivo is string;
       // Ela só pode reenviar (ou cancelar) enquanto os pais não aprovaram.
-      allow update: if (filha() && resource.data.status != 'aprovada'
+      allow update: if ((filha() || pais()) && resource.data.status != 'aprovada'
           && request.resource.data.status == 'pendente'
           && request.resource.data.motivo is string
           && request.resource.data.motivo.size() <= 500)
         || (pais() && request.resource.data.status in ['aprovada', 'recusada']);
-      allow delete: if filha() && resource.data.status != 'aprovada';
+      allow delete: if familia() && resource.data.status != 'aprovada';
     }
 
     // Fotos pequenas (o app já comprime antes de enviar).

@@ -9,6 +9,9 @@ import Calendario from './Calendario';
 import Aulas from './Aulas';
 import Instalar from './Instalar';
 
+// Contas que podem alternar entre a visão de pai e a de filha, só para testar o app.
+const EMAILS_TESTE = ['rcandrerc@gmail.com'];
+
 export default function App() {
   const [usuario, setUsuario] = useState(undefined);
 
@@ -41,15 +44,22 @@ function Logado({ usuario }) {
   }, [membro?.papel]);
 
   if (!familia) return <Aviso titulo="Carregando…" />;
-  if (membro) return <Principal membro={membro} />;
+  if (membro) return <Principal membro={membro} testador={membro.papel === 'pais' && EMAILS_TESTE.includes(usuario.email)} />;
   return <Escolha usuario={usuario} familia={familia} />;
 }
 
 // Telas de quem já é da família, com a barra para alternar entre Hoje e Calendário.
-function Principal({ membro }) {
+function Principal({ membro: real, testador }) {
   const [aba, setAba] = useState('hoje');
+  const [comoFilha, setComoFilha] = useState(false);
+  const membro = testador && comoFilha ? { nome: 'Luiza', papel: 'filha' } : real;
   return (
     <>
+      {testador && (
+        <button className="trocar-visao" onClick={() => setComoFilha(!comoFilha)}>
+          {comoFilha ? '👤 Ver como pai' : '🧒 Ver como filha'}
+        </button>
+      )}
       {aba === 'calendario' ? <Calendario />
         : aba === 'aulas' ? <Aulas />
         : membro.papel === 'filha' ? <TelaLuiza membro={membro} /> : <TelaPais membro={membro} />}
