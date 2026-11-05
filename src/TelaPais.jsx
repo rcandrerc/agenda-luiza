@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { materias, materiaDoNome, proximaAula } from './horario';
 import Topo from './Topo';
 import {
   apareceNoDia, atualizarTarefa, calcularMesada, criarTarefa, criarTarefasIniciais, decidirJustificativa, descreverQuando, emojiSugerido, hoje,
@@ -206,7 +207,28 @@ function NovaTarefa({ dia }) {
   const [inicio, setInicio] = useState(dia);
   const [vale, setVale] = useState(false);
   const [emoji, setEmoji] = useState(null);
+  const [materia, setMateria] = useState('');
+  const [materiaManual, setMateriaManual] = useState(false);
+  const listaMaterias = materias().map((m) => m.nome);
   const emojiFinal = emoji ?? emojiSugerido(nome);
+
+  // Escolhe a matéria e já coloca o prazo na próxima aula dela.
+  function escolherMateria(m) {
+    setMateria(m);
+    if (m) {
+      const proxima = proximaAula(m, dia);
+      if (proxima) setPrazo(proxima);
+    }
+  }
+
+  function mudarNome(valor) {
+    setNome(valor);
+    if (tipo === 'prazo' && !materiaManual) {
+      const achada = materiaDoNome(valor);
+      if (achada) escolherMateria(achada);
+      else setMateria('');
+    }
+  }
 
   async function adicionar(e) {
     e.preventDefault();
@@ -221,13 +243,15 @@ function NovaTarefa({ dia }) {
     });
     setNome('');
     setEmoji(null);
+    setMateria('');
+    setMateriaManual(false);
   }
 
   return (
     <section className="grupo">
       <h2>Nova tarefa</h2>
       <form className="cartao nova" onSubmit={adicionar}>
-        <input id="nova-nome" placeholder="Ex.: Escovar os dentes" value={nome} onChange={(e) => setNome(e.target.value)} required />
+        <input id="nova-nome" placeholder="Ex.: Escovar os dentes" value={nome} onChange={(e) => mudarNome(e.target.value)} required />
         <div className="opcoes">
           <select id="nova-categoria" value={categoria} onChange={(e) => setCategoria(e.target.value)} aria-label="Categoria">
             <option value="casa">Casa</option>
@@ -245,12 +269,19 @@ function NovaTarefa({ dia }) {
         )}
         {tipo === 'prazo' && (
           <>
+            <label className="campo">Matéria (o prazo vira a próxima aula dela)
+              <select id="nova-materia" value={materia} onChange={(e) => { setMateriaManual(true); escolherMateria(e.target.value); }}>
+                <option value="">Nenhuma, escolho a data</option>
+                {listaMaterias.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </label>
             <label className="campo">Entregar até
               <input id="novo-prazo" type="date" value={prazo} min={dia} onChange={(e) => setPrazo(e.target.value)} required />
             </label>
             <label className="campo">Aparecer para a Luiza a partir de
               <input id="novo-inicio" type="date" value={inicio} min={dia} onChange={(e) => setInicio(e.target.value)} required />
             </label>
+            {materia && <p className="dica">Próxima aula de {materia}: {new Date(`${prazo}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' })}. Dá para ajustar a data se precisar.</p>}
             <p className="dica">Ela vê todo dia até marcar como feita. Depois some.</p>
           </>
         )}

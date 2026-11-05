@@ -57,3 +57,29 @@ const MATIZES = {
   'Artes': 50, 'LIV': 170, 'Recreio': 90,
 };
 export const matizDe = (materia) => MATIZES[materia] ?? 210;
+
+// Próxima aula da matéria depois do dia dado ("AAAA-MM-DD"), no formato "AAAA-MM-DD".
+// Não conta o próprio dia: dever passado hoje vale para a aula seguinte.
+// Feriados e recessos não são considerados.
+export function proximaAula(materia, depoisDe) {
+  const dias = new Set(
+    DIAS_AULA.filter((_, i) => aulasDoDia(i).some((b) => b.materia === materia)).map((d) => d.numero),
+  );
+  if (!dias.size) return null;
+  const d = new Date(`${depoisDe}T12:00:00`);
+  for (let i = 0; i < 8; i += 1) {
+    d.setDate(d.getDate() + 1);
+    if (dias.has(d.getDay())) {
+      const p = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    }
+  }
+  return null;
+}
+
+// Descobre a matéria pelo nome da tarefa (ex.: "Dever de matemática"). Sem acento e sem maiúscula.
+export function materiaDoNome(nome) {
+  const limpa = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const n = limpa(nome);
+  return materias().map((m) => m.nome).find((m) => m !== 'LIV' && m !== 'P. Textual' && n.includes(limpa(m))) ?? null;
+}
