@@ -284,7 +284,7 @@ export function useJustificativas(dia) {
 }
 
 // Dias anteriores (do mais recente ao mais antigo) em que ainda dá para justificar.
-export const DIAS_PARA_JUSTIFICAR = 3;
+export const DIAS_PARA_JUSTIFICAR = 7;
 
 export function diasAnteriores(dia, n = DIAS_PARA_JUSTIFICAR) {
   const base = new Date(`${dia}T12:00:00`);
