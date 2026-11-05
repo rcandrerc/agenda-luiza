@@ -37,14 +37,7 @@ export default function TelaLuiza({ membro }) {
   // A primeira leitura só guarda o ponto de partida, para não soltar confete ao abrir o app.
   const antes = useRef(null);
   useEffect(() => {
-    const pendentesAntes = pronto ? anteriores.map((d) => ({
-    dia: d,
-    itens: (todas ?? []).filter((t) => !t.prazo && tarefaDoDia(t, d)
-      && !feitaDeVerdade(concAnteriores.find((c) => c.dia === d && c.tarefaId === t.id))
-      && justAnteriores.find((j) => j.dia === d && j.tarefaId === t.id)?.status !== 'aprovada'),
-  })).filter((g) => g.itens.length) : [];
-
-  if (!pronto) return;
+    if (!pronto) return;
     const bonus = mesada.bonusGanho;
     if (antes.current) {
       if (bonus && !antes.current.bonus) confete(280);
@@ -52,6 +45,14 @@ export default function TelaLuiza({ membro }) {
     }
     antes.current = { feitas, bonus };
   }, [pronto, feitas, total, mesada?.bonusGanho]);
+
+  // Tarefas dos últimos dias que ficaram sem fazer e sem justificativa aprovada.
+  const pendentesAntes = pronto ? anteriores.map((d) => ({
+    dia: d,
+    itens: todas.filter((t) => !t.prazo && tarefaDoDia(t, d)
+      && !feitaDeVerdade(concAnteriores.find((c) => c.dia === d && c.tarefaId === t.id))
+      && justAnteriores.find((j) => j.dia === d && j.tarefaId === t.id)?.status !== 'aprovada'),
+  })).filter((g) => g.itens.length) : [];
 
   if (!pronto) return <div className="tela"><Topo titulo={`Oi, ${membro.nome}!`} feitas={0} total={0} /></div>;
 
