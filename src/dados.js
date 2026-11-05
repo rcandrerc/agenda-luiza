@@ -92,16 +92,20 @@ export function urgenciaPrazo(t) {
   const h = hoje();
   if (t.prazo < h) return 'atrasada';
   if (t.prazo === h) return 'hoje';
+  if (t.prazo === formatarDia(new Date(Date.now() + 86400000))) return 'amanha';
   const dias = (new Date(`${t.prazo}T12:00:00`) - new Date(`${h}T12:00:00`)) / 86400000;
   return dias <= 2 ? 'perto' : '';
 }
+
+// Deveres que ainda não foram feitos e vencem amanhã, para o alerta vermelho.
+export const deveresParaAmanha = (tarefas) => tarefas.filter((t) => urgenciaPrazo(t) === 'amanha');
 
 export function descreverQuando(t) {
   if (t.prazo) {
     const u = urgenciaPrazo(t);
     if (u === 'atrasada') return `Atrasada! era até ${dataCurta(t.prazo)}`;
     if (u === 'hoje') return 'Entregar hoje';
-    if (u === 'perto' && t.prazo === formatarDia(new Date(Date.now() + 86400000))) return 'Entregar amanhã';
+    if (u === 'amanha') return '🚨 Entregar amanhã!';
     return `Entregar até ${dataCurta(t.prazo)}`;
   }
   if (t.data) return `Só ${new Date(`${t.data}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}`;

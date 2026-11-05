@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Topo from './Topo';
+import AlertaAmanha from './AlertaAmanha';
 import {
   calcularMesada, cancelarJustificativa, descreverQuando, desmarcar, dinheiro, enviarFoto, enviarJustificativa, feitaDeVerdade, hoje, useConclusoes, useConclusoesSemana, useConfigMesada,
   useFotos, useJustificativas, useJustificativasSemana, urgenciaPrazo, useTarefas, useTarefasDoDia,
@@ -50,6 +51,7 @@ export default function TelaLuiza({ membro }) {
     <div className="tela">
       <Topo titulo={`Oi, ${membro.nome}!`} feitas={feitas} total={tarefas.length} />
       <main className="conteudo">
+        <AlertaAmanha tarefas={todas} />
         <Mesada mesada={mesada} />
         {tarefas.length === 0 && <p className="vazio">Nenhuma tarefa hoje. Aproveita o dia! 🌈</p>}
         {GRUPOS.map((g) => {
