@@ -215,6 +215,12 @@ function NovaTarefa({ dia }) {
   // Escolhe a matéria e já coloca o prazo na próxima aula dela.
   function escolherMateria(m) {
     setMateria(m);
+    // O nome já vem com a matéria (ex.: "Matemática: "), só falta escrever as páginas.
+    // Não mexe se a pessoa já escreveu outra coisa.
+    setNome((atual) => {
+      const vazio = !atual.trim() || listaMaterias.some((x) => atual.trim() === `${x}:`);
+      return vazio ? (m ? `${m}: ` : '') : atual;
+    });
     if (m) {
       setTipo('prazo');
       const proxima = proximaAula(m, dia);
