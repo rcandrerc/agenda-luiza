@@ -60,3 +60,11 @@ npm run dev
 | `src/TelaLuiza.jsx` | Tela da Luiza |
 | `src/TelaPais.jsx` | Tela dos pais |
 | `firestore.rules` | Quem pode ler e escrever o quê |
+
+## Escala do restaurante Armazém 111
+
+Segundo app no mesmo repositório, em `escala-armazem-111/` (código em `src-escala/`), publicado junto em `/escala-armazem-111/`. Usa o mesmo projeto Firebase, com coleções próprias (`escala_*`).
+
+- Qualquer pessoa com o link vê a escala, sem login.
+- Só quem entra com a conta Google do dono (`rcandrerc@gmail.com`) ou de um e-mail cadastrado em **Quem pode editar** altera a escala. Essa permissão é checada nas regras do Firestore (`firestore.rules`), não só na tela.
+- Semana de segunda a domingo, com turnos prontos (Folga, Almoço, Jantar, Integral) ou texto livre, e botão para copiar a escala para o WhatsApp.

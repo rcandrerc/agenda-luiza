@@ -106,5 +106,36 @@ service cloud.firestore {
         && request.resource.data.imagem is string
         && request.resource.data.imagem.size() < 900000;
     }
+
+    // ===== Escala do restaurante Armazém 111 (outro app, mesmas regras de projeto) =====
+    // Qualquer pessoa com o link vê a escala, sem login. Só o dono e quem ele
+    // cadastrar em escala_config/editores (e-mail Google verificado) pode alterar.
+    function dono() {
+      return request.auth != null
+        && request.auth.token.email == 'rcandrerc@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+    function editorEscala() {
+      return dono() || (
+        request.auth != null
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/escala_config/editores)
+        && request.auth.token.email.lower() in get(/databases/$(database)/documents/escala_config/editores).data.emails
+      );
+    }
+
+    match /escala_funcionarios/{id} {
+      allow read: if true;
+      allow write: if editorEscala();
+    }
+    match /escala_semanas/{id} {
+      allow read: if true;
+      allow write: if editorEscala();
+    }
+    // Quem pode editar: só o dono mexe nesta lista.
+    match /escala_config/editores {
+      allow read: if true;
+      allow write: if dono();
+    }
   }
 }
